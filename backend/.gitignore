@@ -92,10 +92,7 @@ debug.log
 # PyCharm
 .idea/
 
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
+
 
 # Windows
 Thumbs.db
@@ -183,12 +180,6 @@ coverage.xml
 local_settings.py
 db.sqlite3
 
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
 
 # Sphinx documentation
 docs/_build/
@@ -218,13 +209,6 @@ celerybeat-schedule
 env/
 venv/
 ENV/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
 
 # mkdocs documentation
 /site
