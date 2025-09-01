@@ -65,6 +65,8 @@ INSTALLED_APPS = [
     'core',
     'messaging',
     'whitenoise',
+    'rooms',
+    
 ]
 
 MIDDLEWARE = [
