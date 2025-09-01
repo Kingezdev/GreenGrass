@@ -7,8 +7,10 @@ from rest_framework_simplejwt.views import (
 )
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import LandingView
 
 urlpatterns = [
+    path('', LandingView.as_view(), name='landing'),
     path('admin/', admin.site.urls),
     
     # JWT Authentication
