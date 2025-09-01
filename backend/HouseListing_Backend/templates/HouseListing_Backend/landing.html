@@ -1,0 +1,20 @@
+{% extends 'HouseListing_Backend/base.html' %}
+
+{% block content %}
+    <h2>Welcome to GreenGrass API</h2>
+    <p>This is the backend API service for the GreenGrass application.</p>
+    
+    <div class="endpoints">
+        <h3>Available API Endpoints:</h3>
+        <ul>
+            <li><strong>Accounts API:</strong> <code>/api/accounts/</code></li>
+            <li><strong>Rooms API:</strong> <code>/api/rooms/</code></li>
+            <li><strong>Messaging API:</strong> <code>/api/messaging/</code></li>
+            <h5>CHECK THE AVAILABlE_ENDPOINTS.MD FILE FOR A COMPREHENSIVE LIST OF THE API ENDPOINTS</h5>
+        </ul>
+    </div>
+    
+    <p>For API documentation and usage, please refer to the project's documentation.</p>
+    
+    <p><small>© {% now "Y" %} GreenGrass. All rights reserved.</small></p>
+{% endblock %}
