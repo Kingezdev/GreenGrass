@@ -1,16 +1,18 @@
-
-import './App.css'
+import React from "react";
+import AppRoutes from "./routes";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 function App() {
-
   return (
-    <>
-      <h1>Vite + React</h1>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <div className="flex-1">
+        <AppRoutes />
+      </div>
+      <Footer />
+    </div>
+  );
 }
 
-export default App
+export default App;
