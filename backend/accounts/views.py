@@ -14,6 +14,7 @@ from .serializers import RegisterSerializer, UserProfileSerializer, ProfileDetai
 from .models import UserProfile, EmailVerificationToken, User
 from .email_utils import send_verification_email
 
+
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -25,19 +26,19 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
+        # Create UserProfile for the new user
+        profile = UserProfile.objects.create(user=user)
+        
         # Send verification email
         if settings.EMAIL_VERIFICATION_ENABLED:
             send_verification_email(user)
         
-        # Return user profile information
-        profile = UserProfile.objects.get(user=user)
+        # Serialize the profile
         profile_serializer = UserProfileSerializer(profile)
-        
         response_data = profile_serializer.data
         response_data['message'] = 'Registration successful. Please check your email to verify your account.'
         
         return Response(response_data, status=status.HTTP_201_CREATED)
-
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -263,11 +264,11 @@ class ResendVerificationEmailView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LandlordListView(generics.ListAPIView):
-    """
-    List all landlords with their profiles and stats
-    """
+    """List all landlords with their profiles and stats"""
     serializer_class = ProfileDetailSerializer
     permission_classes = [permissions.AllowAny]
     
     def get_queryset(self):
-        return UserProfile.objects.filter(user_type='landlord').select_related('user')
+        return UserProfile.objects.filter(user__user_type='landlord').select_related('user')
+
+

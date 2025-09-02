@@ -25,4 +25,6 @@ urlpatterns = [
     
     # Public endpoints
     path('landlords/', views.LandlordListView.as_view(), name='landlord-list'),
+    
+    
 ]

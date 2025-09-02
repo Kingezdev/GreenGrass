@@ -1,18 +1,37 @@
-asgiref==3.9.1
-celery==5.4.0
+# Core
 Django==5.2.5
-django-celery-results==2.5.1
+asgiref==3.9.1
+python-dotenv==1.1.1
+
+# Database
+psycopg2-binary==2.9.10
+
+# REST Framework
+djangorestframework==3.16.1
+djangorestframework-simplejwt==5.5.1
 django-cors-headers==4.7.0
 django-filter==25.1
-djangorestframework==3.16.1
-djangorestframework_simplejwt==5.5.1
-gunicorn==23.0.0
-packaging==25.0
-pillow==11.3.0
-psycopg2-binary==2.9.10
+
+# Email
+django-anymail==13.0.0
+
+# File Processing
+Pillow==11.3.0
+
+# Security
 PyJWT==2.10.1
-python-dotenv==1.1.1
-redis==5.0.1
+
+# Production
+gunicorn==23.0.0
+whitenoise==6.9.0
+
+# Development
+pytest==8.2.0
+pytest-django==4.8.0
+black==24.4.2
+flake8==7.1.1
+
+# Utils
 sqlparse==0.5.3
 tzdata==2025.2
-whitenoise==6.9.0
+packaging==25.0

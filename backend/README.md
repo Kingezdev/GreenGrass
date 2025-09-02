@@ -11,30 +11,47 @@ A Django REST Framework backend for a property listing application with JWT auth
 - File uploads
 - CORS support
 - Security best practices
+- Email verification system
+- Synchronous email sending with console output for development
 
 ## Prerequisites
 
 - Python 3.9+
 - PostgreSQL
-- Node.js & npm (for frontend)
+
 
 ## Setup
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/house-listing-backend.git
-   cd house-listing-backend
+   git clone https://github.com/kingezdev/greengrass.git
+   cd greengrass
+   cd backend
    ```
 
-2. **Create and activate a virtual environment**
-   ```bash
-   # Windows
-   python -m venv venv
-   .\venv\Scripts\activate
-   
-   # macOS/Linux
-   python3 -m venv venv
-   source venv/bin/activate
+2. **Set up environment variables**
+   - Copy `.env.example` to `.env`
+   - Configure your database settings in `.env`
+
+## Email Configuration
+
+The application uses synchronous email sending with the following configuration:
+
+1. **Development (Default)**
+   - Emails are printed to the console
+   - No additional setup required
+   - View email content in the terminal where the server is running
+
+2. **Production**
+   Configure your email settings in `.env`:
+   ```
+   EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+   EMAIL_HOST=your-smtp-host
+   EMAIL_PORT=587
+   EMAIL_USE_TLS=True
+   EMAIL_HOST_USER=your-email@example.com
+   EMAIL_HOST_PASSWORD=your-email-password
+   DEFAULT_FROM_EMAIL=your-email@example.com
    ```
 
 3. **Install dependencies**
@@ -42,26 +59,45 @@ A Django REST Framework backend for a property listing application with JWT auth
    pip install -r requirements.txt
    ```
 
-4. **Set up environment variables**
-   ```bash
-   python setup_env.py
-   ```
-   Review and update the generated `.env` file as needed.
-
-5. **Run database migrations**
+4. **Run database migrations**
    ```bash
    python manage.py migrate
    ```
 
-6. **Create a superuser**
+5. **Create a superuser**
    ```bash
    python manage.py createsuperuser
    ```
 
-7. **Run the development server**
+6. **Run the development server**
    ```bash
    python manage.py runserver
    ```
+
+## Email Verification
+
+The application includes a built-in email verification system:
+
+1. On registration, users receive a verification email
+2. The email contains a verification link
+3. Clicking the link verifies the user's email
+4. Users must verify their email before logging in
+
+### Testing Email Verification
+
+1. Register a new user
+2. Check the terminal for the verification email output
+3. Click the verification link or use the API endpoint:
+   ```
+   POST /api/accounts/verify-email/<token>/
+   ```
+
+### Running in Development Mode
+
+For development, you can run the development server normally.
+```bash
+python manage.py runserver
+```
 
 ## Development
 

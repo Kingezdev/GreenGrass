@@ -41,17 +41,17 @@ class RegisterSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
-            is_active=False  # User needs to verify email first
+            is_active=False
         )
         user.set_password(validated_data['password'])
         user.save()
         return user
 
-
 class UserProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
+    date_of_birth = serializers.DateField(required=False)  # now on profile
 
     class Meta:
         model = UserProfile
@@ -77,11 +77,12 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source='user.last_name')
     is_verified = serializers.BooleanField(source='user.is_verified')
     date_joined = serializers.DateTimeField(source='user.date_joined')
+    date_of_birth = serializers.DateField()  # profile field
 
     class Meta:
         model = UserProfile
         fields = ('email', 'first_name', 'last_name', 'phone_number', 
-                 'avatar', 'bio', 'date_of_birth', 'is_verified', 'date_joined')
+                  'avatar', 'bio', 'date_of_birth', 'is_verified', 'date_joined')
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
@@ -90,16 +91,16 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
     current_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     new_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    date_of_birth = serializers.DateField(required=False)  # profile field
 
     class Meta:
         model = UserProfile
         fields = ('first_name', 'last_name', 'phone_number', 'avatar', 
-                 'bio', 'date_of_birth', 'current_password', 'new_password', 'confirm_password')
+                  'bio', 'date_of_birth', 'current_password', 'new_password', 'confirm_password')
         extra_kwargs = {
             'phone_number': {'required': False},
             'avatar': {'required': False},
             'bio': {'required': False},
-            'date_of_birth': {'required': False}
         }
 
     def validate(self, data):

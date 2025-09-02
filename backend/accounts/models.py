@@ -86,11 +86,13 @@ class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     user_type = models.CharField(max_length=10, choices=USER_TYPES)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
+
     
     # Profile fields
     bio = models.TextField(max_length=500, blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     location = models.CharField(max_length=100, blank=True)
+    date_of_birth = models.DateField(blank=True, null=True)
     
     # Landlord-specific fields
     company_name = models.CharField(max_length=100, blank=True)

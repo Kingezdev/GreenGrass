@@ -10,7 +10,6 @@ from django.urls import reverse
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from .models import EmailVerificationToken, User
-from .tasks import send_verification_email_async
 
 logger = logging.getLogger(__name__)
 
@@ -35,19 +34,17 @@ def check_email_rate_limit(email, limit=5, period=3600):
     cache.set(cache_key, count + 1, period)
     return True
 
-def send_verification_email(user, request=None, async_send=True, **kwargs):
+def send_verification_email(user, request=None, **kwargs):
     """
     Send an email with a verification link to the user's email address.
     
     Args:
         user: The user instance to send the verification email to
         request: Optional request object for building absolute URLs
-        async_send: If True, sends the email asynchronously using Celery
         **kwargs: Additional arguments to pass to the email sending function
         
     Returns:
-        bool or AsyncResult: True if sync email was sent successfully, 
-                           or Celery AsyncResult if sent asynchronously
+        bool: True if email was sent successfully
     """
     # Check rate limit
     if not check_email_rate_limit(user.email):
@@ -80,33 +77,22 @@ def send_verification_email(user, request=None, async_send=True, **kwargs):
     html_message = render_to_string('emails/verify_email.html', context)
     plain_message = strip_tags(html_message)
     
-    if async_send:
-        # Send email asynchronously using Celery
-        return send_verification_email_async.delay(
-            user_id=user.id,
+    try:
+        # Send email synchronously
+        send_mail(
             subject=subject,
-            plain_message=plain_message,
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
             html_message=html_message,
+            fail_silently=False,
             **kwargs
         )
-    else:
-        # Send email synchronously (for testing/fallback)
-        try:
-            send_mail(
-                subject=subject,
-                message=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                html_message=html_message,
-                fail_silently=False,
-                **kwargs
-            )
-            logger.info(f"Verification email sent to {user.email}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to send verification email to {user.email}: {e}")
-            # Mark token as used to prevent issues
-            token_obj.is_used = True
-            token_obj.save()
-            return False
-
+        logger.info(f"Verification email sent to {user.email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send verification email to {user.email}: {str(e)}")
+        # Mark token as used to prevent issues
+        token_obj.is_used = True
+        token_obj.save()
+        return False
