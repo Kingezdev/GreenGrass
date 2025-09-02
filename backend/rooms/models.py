@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from accounts.models import UserProfile
 
 class Property(models.Model):
@@ -17,7 +17,7 @@ class Property(models.Model):
         ('maintenance', 'Under Maintenance'),
     ]
     
-    landlord = models.ForeignKey(User, on_delete=models.CASCADE, related_name='room_properties')
+    landlord = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='room_properties')
     title = models.CharField(max_length=200)
     property_type = models.CharField(max_length=20, choices=PROPERTY_TYPES, default='apartment')
     location = models.CharField(max_length=300)
@@ -67,7 +67,7 @@ class PropertyReview(models.Model):
     ]
     
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='reviews')
-    tenant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='property_reviews')
+    tenant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='property_reviews')
     rating = models.IntegerField(choices=RATING_CHOICES)
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -89,8 +89,8 @@ class LandlordReview(models.Model):
         (5, '5 Stars'),
     ]
     
-    landlord = models.ForeignKey(User, on_delete=models.CASCADE, related_name='landlord_reviews')
-    tenant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='given_landlord_reviews')
+    landlord = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='landlord_reviews')
+    tenant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='given_landlord_reviews')
     rating = models.IntegerField(choices=RATING_CHOICES)
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -104,7 +104,7 @@ class LandlordReview(models.Model):
         return f"{self.tenant.username} reviewed {self.landlord.username} ({self.rating} stars)"
 
 class Favorite(models.Model):
-    tenant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
+    tenant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='favorites')
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='favorited_by')
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -120,7 +120,7 @@ class PropertyView(models.Model):
     Track property views for analytics
     """
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='views')
-    viewer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    viewer = models.ForeignKey(settings.AUTH_USER_MODEL  , on_delete=models.CASCADE, null=True, blank=True)
     ip_address = models.GenericIPAddressField()
     viewed_at = models.DateTimeField(auto_now_add=True)
     
