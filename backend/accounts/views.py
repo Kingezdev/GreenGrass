@@ -1,4 +1,5 @@
-from rest_framework import generics, permissions, status
+import logging
+from rest_framework import generics, permissions, status, throttling
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model
@@ -124,95 +125,78 @@ class MyProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         return get_object_or_404(UserProfile, user=self.request.user)
 
-@method_decorator(csrf_exempt, name='dispatch')
+logger = logging.getLogger(__name__)
 @method_decorator(csrf_exempt, name='dispatch')
 class EmailVerificationView(APIView):
     """
     Verify user's email using the verification token
     """
     permission_classes = [permissions.AllowAny]
-    
+    throttle_classes = [throttling.AnonRateThrottle]  # You can replace with custom throttle
+
+    def verify_token(self, token_obj):
+        """
+        Helper function to perform the actual verification logic
+        """
+        user = token_obj.user
+        profile = user.profile
+
+        if not profile.email_verified:
+            profile.email_verified = True
+            profile.save()
+            logger.info(f"Email verified for user {user.email}")
+
+        if not user.is_active:
+            user.is_active = True
+            user.save()
+
+        token_obj.is_used = True
+        token_obj.save()
+
+        return user
+
     def get(self, request, token):
+        """
+        Verify email via browser link (redirects)
+        """
         try:
             token_obj = EmailVerificationToken.objects.get(token=token, is_used=False)
-            
+
             if not token_obj.is_valid():
+                logger.warning(f"Expired token attempt: {token}")
                 return redirect(f"{settings.FRONTEND_URL}/verification/error/?error=expired")
-            
-            user = token_obj.user
-            profile = user.profile
-            
-            if not profile.email_verified:
-                # Mark email as verified
-                profile.email_verified = True
-                profile.save()
-                
-                # Activate user account if it's not already active
-                if not user.is_active:
-                    user.is_active = True
-                    user.save()
-                
-                # Mark token as used
-                token_obj.is_used = True
-                token_obj.save()
-                
-                # Redirect to success page on frontend
-                return redirect(f"{settings.FRONTEND_URL}/verification/success/")
-            
-            # Email already verified
-            return redirect(f"{settings.FRONTEND_URL}/verification/already-verified/")
-            
+
+            user = self.verify_token(token_obj)
+            return redirect(f"{settings.FRONTEND_URL}/verification/success/")
+
         except (EmailVerificationToken.DoesNotExist, UserProfile.DoesNotExist):
+            logger.warning(f"Invalid token attempt: {token}")
             return redirect(f"{settings.FRONTEND_URL}/verification/error/?error=invalid")
-    
+
     def post(self, request, token):
-        """API endpoint for email verification (for programmatic use)"""
+        """
+        API endpoint for email verification (programmatic)
+        """
         try:
             token_obj = EmailVerificationToken.objects.get(token=token, is_used=False)
-            
+
             if not token_obj.is_valid():
+                logger.warning(f"Expired token attempt (POST): {token}")
                 return Response(
                     {'error': 'Verification link has expired. Please request a new one.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            user = token_obj.user
-            profile = user.profile
-            
-            if not profile.email_verified:
-                # Mark email as verified
-                profile.email_verified = True
-                profile.save()
-                
-                # Activate user account if it's not already active
-                if not user.is_active:
-                    user.is_active = True
-                    user.save()
-                
-                # Mark token as used
-                token_obj.is_used = True
-                token_obj.save()
-                
-                return Response(
-                    {'message': 'Email verified successfully'},
-                    status=status.HTTP_200_OK
-                )
-            
-            return Response(
-                {'message': 'Email already verified'},
-                status=status.HTTP_200_OK
-            )
-            
+
+            self.verify_token(token_obj)
+            return Response({'message': 'Email verified successfully'}, status=status.HTTP_200_OK)
+
         except EmailVerificationToken.DoesNotExist:
-            return Response(
-                {'error': 'Invalid verification token'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            logger.warning(f"Invalid token attempt (POST): {token}")
+            return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
+
         except UserProfile.DoesNotExist:
-            return Response(
-                {'error': 'User profile not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            logger.error(f"User profile not found for token: {token}")
+            return Response({'error': 'User profile not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ResendVerificationEmailView(APIView):

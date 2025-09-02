@@ -56,15 +56,23 @@ class User(AbstractUser):
         return self.email
 
 class EmailVerificationToken(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='email_verification')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='email_verification_tokens')
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_used = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']  # Newest tokens first
 
     def is_valid(self):
         # Token is valid for 24 hours
         expiration_time = self.created_at + timezone.timedelta(hours=24)
         return not self.is_used and timezone.now() <= expiration_time
+
+    def mark_used(self):
+        """Mark this token as used."""
+        self.is_used = True
+        self.save(update_fields=['is_used'])
 
     def __str__(self):
         return f"{self.user.email} - {'Used' if self.is_used else 'Valid'}"
