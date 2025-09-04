@@ -81,6 +81,7 @@ const AppRoutes = () => (
     />
     <Route path="/landlord/:id" element={<LandlordProfile />} />
     <Route path="/tenant/:id" element={<TenantProfile />} />
+    
   </Routes>
 );
 
