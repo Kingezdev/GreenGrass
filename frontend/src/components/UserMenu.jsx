@@ -33,20 +33,26 @@ const UserMenu = ({ user, onLogout }) => {
     setIsOpen(false);
   };
 
+  const handleLogout = () => {
+    onLogout(); // Call the logout function from parent
+    setIsOpen(false);
+    navigate('/'); // Navigate to home page after logout
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 focus:outline-none"
+        className="flex items-center space-x-2 focus:outline-none p-2 rounded-lg hover:bg-gray-100"
       >
         <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
           <span className="text-white text-sm font-medium">
             {user.name.charAt(0).toUpperCase()}
           </span>
         </div>
-        <span className="hidden md:block text-gray-700">{user.name}</span>
+        <span className="hidden md:block text-gray-700 text-sm">{user.name}</span>
         <svg
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -66,30 +72,30 @@ const UserMenu = ({ user, onLogout }) => {
             onClick={handleProfileClick}
             className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
-            View Profile
+            👤 View Profile
           </button>
           
           <button
             onClick={handleSettingsClick}
             className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
-            Edit Profile
+            ⚙️ Edit Profile
           </button>
           
           <Link
             to="/dashboard"
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
-            Dashboard
+            📊 Dashboard
           </Link>
           
           <div className="border-t border-gray-100 my-1"></div>
           
           <button
-            onClick={onLogout}
+            onClick={handleLogout}
             className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
           >
-            Sign out
+            🚪 Sign out
           </button>
         </div>
       )}

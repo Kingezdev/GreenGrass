@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
-import PropertyDetails from "./pages/PropertyDetails";
+import ViewPropertyDetails from "./pages/ViewPropertyDetails";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VerificationStatus from "./pages/VerificationStatus";
@@ -8,7 +8,11 @@ import Favorites from "./pages/Favorites";
 import Messages from "./pages/Messages";
 import LandlordProfile from "./pages/LandlordProfile";
 import TenantProfile from "./pages/TenantProfile";
-import Dashboard from "./pages/Dashboard"; 
+import Dashboard from "./pages/Dashboard";
+import ProfileSettings from "./pages/ProfileSettings";
+import AddProperty from "./pages/AddProperty";
+import EditProperty from "./pages/EditProperty";
+
 
 // Authentication check functions
 const isAuthenticated = () => {
@@ -44,7 +48,7 @@ const HomeRoute = () => {
 const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<HomeRoute />} />
-    <Route path="/property/:id" element={<PropertyDetails />} />
+    <Route path="/property/:id" element={<ViewPropertyDetails />} />
     <Route path="/login" element={<Login />} />
     <Route path="/signup" element={<Signup />} />
     <Route 
@@ -81,7 +85,32 @@ const AppRoutes = () => (
     />
     <Route path="/landlord/:id" element={<LandlordProfile />} />
     <Route path="/tenant/:id" element={<TenantProfile />} />
+
+    <Route 
+      path="/profile/settings" 
+      element={
+        <ProtectedRoute>
+          <ProfileSettings />
+        </ProtectedRoute>
+      } 
+    />
     
+    <Route 
+      path="/add-property" 
+      element={
+        <ProtectedRoute requiredRole="landlord">
+          <AddProperty />
+        </ProtectedRoute>
+      } 
+    />
+    <Route 
+      path="/edit-property/:id" 
+      element={
+        <ProtectedRoute requiredRole="landlord">
+          <EditProperty />
+        </ProtectedRoute>
+      } 
+    />
   </Routes>
 );
 

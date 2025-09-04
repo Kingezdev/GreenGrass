@@ -114,6 +114,7 @@ const TenantProfile = () => {
       </div>
 
       <div className="space-y-6">
+        
         {/* Rental History */}
         <div className="bg-white rounded-lg shadow-sm border">
           <div className="p-6 border-b">
