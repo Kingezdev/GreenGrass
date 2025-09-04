@@ -1,0 +1,39 @@
+{% extends 'verification/base.html' %}
+
+{% block title %}Verification Error - GreenGrass{% endblock %}
+
+{% block content %}
+    <h1>⚠️ Verification Error</h1>
+    
+    <div class="message error">
+        {% if error == 'expired' %}
+            <h3>Verification Link Expired</h3>
+            <p>This verification link has expired. Please request a new one using the button below.</p>
+        {% elif error == 'invalid' %}
+            <h3>Invalid Verification Link</h3>
+            <p>The verification link is invalid. This could be because:</p>
+            <ul style="text-align: left; margin: 10px 0 0 20px;">
+                <li>The link has already been used</li>
+                <li>The link is corrupted or incomplete</li>
+                <li>The verification token is invalid</li>
+            </ul>
+        {% else %}
+            <h3>Verification Failed</h3>
+            <p>An unexpected error occurred during verification. Please try again later.</p>
+        {% endif %}
+    </div>
+    
+    <div class="actions">
+        {% if error == 'expired' or error == 'invalid' %}
+            <a href="/api/accounts/resend-verification-email/" class="btn btn-primary">
+                Request New Verification Email
+            </a>
+        {% endif %}
+        <a href="/" class="btn btn-secondary">Go to Homepage</a>
+        <a href="/api/accounts/login/" class="btn btn-secondary">Go to Login</a>
+    </div>
+    
+    <div class="help-text" style="margin-top: 30px; font-size: 14px; color: #666;">
+        <p>If you continue to experience issues, please contact our support team at <a href="mailto:support@greengrass.com">support@greengrass.com</a></p>
+    </div>
+{% endblock %}

@@ -3,7 +3,7 @@ from rest_framework import generics, permissions, status, throttling
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.conf import settings
@@ -158,21 +158,26 @@ class EmailVerificationView(APIView):
 
     def get(self, request, token):
         """
-        Verify email via browser link (redirects)
+        Verify email via browser link (renders HTML response)
         """
         try:
             token_obj = EmailVerificationToken.objects.get(token=token, is_used=False)
 
             if not token_obj.is_valid():
                 logger.warning(f"Expired token attempt: {token}")
-                return redirect(f"{settings.FRONTEND_URL}/verification/error/?error=expired")
+                return render(request, 'verification/error.html', 
+                           {'error': 'expired'}, 
+                           status=400)
 
             user = self.verify_token(token_obj)
-            return redirect(f"{settings.FRONTEND_URL}/verification/success/")
+            return render(request, 'verification/success.html', 
+                        {'user': user, 'token': token})
 
         except (EmailVerificationToken.DoesNotExist, UserProfile.DoesNotExist):
             logger.warning(f"Invalid token attempt: {token}")
-            return redirect(f"{settings.FRONTEND_URL}/verification/error/?error=invalid")
+            return render(request, 'verification/error.html', 
+                        {'error': 'invalid'}, 
+                        status=400)
 
     def post(self, request, token):
         """
