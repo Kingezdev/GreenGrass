@@ -16,14 +16,14 @@ const Navbar = ({ user, setUser }) => {
           {/* Left side - Logo and Navigation */}
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 font-bold text-xl text-green-600">
-              NaijaRent
+              GreenGrass
             </Link>
             <div className="hidden md:ml-8 md:flex md:space-x-6">
               <Link 
                 to="/" 
                 className="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium transition-colors"
               >
-                Browse Properties
+                home
               </Link>
               {user && (
                 <Link 
