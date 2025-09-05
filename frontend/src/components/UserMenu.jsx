@@ -88,6 +88,14 @@ const UserMenu = ({ user, onLogout }) => {
           >
             📊 Dashboard
           </Link>
+
+          <Link
+            to="/transactions"
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => setIsOpen(false)}
+          >
+            💰 Transaction History
+          </Link>
           
           <div className="border-t border-gray-100 my-1"></div>
           

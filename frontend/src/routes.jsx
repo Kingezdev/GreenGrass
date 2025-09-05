@@ -12,6 +12,8 @@ import Dashboard from "./pages/Dashboard";
 import ProfileSettings from "./pages/ProfileSettings";
 import AddProperty from "./pages/AddProperty";
 import EditProperty from "./pages/EditProperty";
+import PaymentPage from "./pages/PaymentPage";
+import Transactions from "./pages/Transactions";
 
 
 // Authentication check functions
@@ -108,6 +110,22 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute requiredRole="landlord">
           <EditProperty />
+        </ProtectedRoute>
+      } 
+    />
+    <Route 
+      path="/payment/:id" 
+      element={
+        <ProtectedRoute requiredRole="tenant">
+          <PaymentPage />
+        </ProtectedRoute>
+      } 
+    />
+    <Route 
+      path="/transactions" 
+      element={
+        <ProtectedRoute>
+          <Transactions />
         </ProtectedRoute>
       } 
     />
