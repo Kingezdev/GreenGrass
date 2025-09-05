@@ -66,6 +66,8 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@greengrass.com')
 # Email Verification Settings
 EMAIL_VERIFICATION_ENABLED = os.getenv('EMAIL_VERIFICATION_ENABLED', 'True') == 'True'
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+# Backend URL for email verification links
+BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
@@ -254,8 +256,8 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  # 24 hours
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),  # 30 days
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),

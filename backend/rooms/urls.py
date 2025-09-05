@@ -7,6 +7,7 @@ urlpatterns = [
     path('my-properties/', views.LandlordPropertiesView.as_view(), name='landlord-properties'),
     path('properties/<int:property_id>/images/', views.PropertyImageUploadView.as_view(), name='property-image-upload'),
     path('properties/<int:property_id>/reviews/', views.PropertyReviewListCreateView.as_view(), name='property-reviews'),
+    path('properties/<int:property_id>/views/', views.PropertyViewListView.as_view(), name='property-views'),
     path('landlords/<int:landlord_id>/reviews/', views.LandlordReviewListCreateView.as_view(), name='landlord-reviews'),
     path('favorites/', views.FavoriteListCreateView.as_view(), name='favorites'),
     path('favorites/<int:property_id>/', views.FavoriteDeleteView.as_view(), name='favorite-delete'),

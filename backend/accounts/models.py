@@ -95,7 +95,8 @@ class UserProfile(models.Model):
     date_of_birth = models.DateField(blank=True, null=True)
     
     # Landlord-specific fields
-    company_name = models.CharField(max_length=100, blank=True)
+    property_name = models.CharField(max_length=100, blank=True, verbose_name='Property/Business Name',
+                                   help_text='Name of your property or business')
     years_experience = models.PositiveIntegerField(null=True, blank=True)
     
     # Analytics fields

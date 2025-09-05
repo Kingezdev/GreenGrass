@@ -57,12 +57,14 @@ def send_verification_email(user, request=None, **kwargs):
     # Create a new verification token
     token_obj = EmailVerificationToken.objects.create(user=user)
     
-    # Build verification URL
+    # Build verification URL using backend URL
     verification_path = reverse('verify-email', kwargs={'token': str(token_obj.token)})
     if request:
         verification_url = request.build_absolute_uri(verification_path)
     else:
-        verification_url = f"{settings.FRONTEND_URL}{verification_path}"
+        # Use backend URL directly instead of frontend URL
+        backend_url = settings.BACKEND_URL or 'http://localhost:8000'
+        verification_url = f"{backend_url}{verification_path}"
     
     # Prepare email context
     context = {

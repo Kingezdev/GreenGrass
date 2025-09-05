@@ -37,6 +37,24 @@ class PropertyCreateSerializer(serializers.ModelSerializer):
         # The landlord will be set in the view
         return Property.objects.create(**validated_data)
 
+class PropertyUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Property
+        fields = [
+            'title', 'property_type', 'location', 'address', 'price',
+            'bedrooms', 'bathrooms', 'area_sqft', 'description',
+            'furnished', 'parking', 'pets_allowed', 'utilities_included',
+            'status'
+        ]
+        extra_kwargs = {field: {'required': False} for field in fields}
+    
+    def update(self, instance, validated_data):
+        # Update only the fields that are provided in the request
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
 class PropertyListSerializer(serializers.ModelSerializer):
     landlord_name = serializers.CharField(source='landlord.username', read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -97,5 +115,14 @@ class FavoriteSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Favorite
-        fields = ('id', 'property', 'property_title', 'property_location', 'property_price', 'tenant_name', 'created_at')
-        read_only_fields = ('id', 'tenant', 'created_at')
+        fields = ('id', 'property', 'property_title', 'property_location', 'property_price', 'created_at', 'tenant_name')
+        read_only_fields = ('tenant', 'created_at')
+
+class PropertyViewSerializer(serializers.ModelSerializer):
+    viewer_username = serializers.CharField(source='viewer.username', read_only=True)
+    property_title = serializers.CharField(source='property.title', read_only=True)
+    
+    class Meta:
+        model = PropertyView
+        fields = ('id', 'property', 'property_title', 'viewer', 'viewer_username', 'ip_address', 'viewed_at')
+        read_only_fields = ('viewer', 'ip_address', 'viewed_at')

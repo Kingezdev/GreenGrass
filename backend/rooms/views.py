@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from .models import Property, PropertyImage, PropertyReview, LandlordReview, Favorite, PropertyView
 from .serializers import (
@@ -10,7 +12,7 @@ from .serializers import (
     PropertyListSerializer, PropertyImageSerializer,
     PropertyReviewSerializer, PropertyReviewCreateSerializer,
     LandlordReviewSerializer, LandlordReviewCreateSerializer,
-    FavoriteSerializer
+    FavoriteSerializer, PropertyViewSerializer
 )
 from accounts.models import UserProfile
 from django.contrib.auth.models import User
@@ -106,6 +108,12 @@ class PropertyDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
     permission_classes = [permissions.AllowAny]  # Anyone can view property details
+    
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            from .serializers import PropertyUpdateSerializer
+            return PropertyUpdateSerializer
+        return PropertySerializer
     
     def get_permissions(self):
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
@@ -269,3 +277,19 @@ class FavoriteDeleteView(generics.DestroyAPIView):
     def get_object(self):
         property_id = self.kwargs.get('property_id')
         return get_object_or_404(Favorite, tenant=self.request.user, property_id=property_id)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PropertyViewListView(generics.ListAPIView):
+    """
+    List all views for a specific property
+    """
+    serializer_class = PropertyViewSerializer
+    permission_classes = [IsLandlordPermission]  # Only property owner can view their property's views
+    
+    def get_queryset(self):
+        property_id = self.kwargs.get('property_id')
+        property = get_object_or_404(Property, id=property_id)
+        # Ensure the requesting user is the property owner
+        if property.landlord != self.request.user:
+            self.permission_denied(self.request, message="You can only view views for your own properties.")
+        return PropertyView.objects.filter(property_id=property_id).select_related('viewer', 'property')
