@@ -24,19 +24,37 @@ class RegisterView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        
+        # The serializer handles user and profile creation
         user = serializer.save()
         
-        # Create UserProfile for the new user
-        profile = UserProfile.objects.create(user=user)
-        
-        # Send verification email
+        # Send verification email if enabled
         if settings.EMAIL_VERIFICATION_ENABLED:
             send_verification_email(user)
         
-        # Serialize the profile
-        profile_serializer = UserProfileSerializer(profile)
-        response_data = profile_serializer.data
-        response_data['message'] = 'Registration successful. Please check your email to verify your account.'
+        # Get the user's profile
+        profile = user.profile
+        
+        # Prepare response data
+        response_data = {
+            'message': 'Registration successful. Please check your email to verify your account.',
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'is_active': user.is_active,
+                'user_type': profile.user_type,
+                'profile_id': profile.id
+            }
+        }
+        
+        # Add profile-specific data based on user type
+        if profile.user_type == 'landlord':
+            response_data['user'].update({
+                'property_name': profile.property_name,
+                'years_experience': profile.years_experience
+            })
         
         return Response(response_data, status=status.HTTP_201_CREATED)
 @method_decorator(csrf_exempt, name='dispatch')
@@ -274,6 +292,4 @@ class LandlordListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     
     def get_queryset(self):
-        return UserProfile.objects.filter(user__user_type='landlord').select_related('user')
-
-
+        return UserProfile.objects.filter(user_type='landlord').select_related('user')

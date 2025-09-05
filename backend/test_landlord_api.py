@@ -20,7 +20,14 @@ test_landlord = {
     "password": "securepassword123",
     "password2": "securepassword123",
     "first_name": "Test",
-    "last_name": "Landlord"
+    "last_name": "Landlord",
+    "user_type": "landlord",
+    "landlord": {
+        "property_name": "Test Properties Inc.",
+        "years_experience": 3,
+        "phone_number": "+1234567890",
+        "bio": "Professional landlord with multiple properties"
+    }
 }
 
 # Test configuration
