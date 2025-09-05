@@ -1,3 +1,4 @@
+// routes.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import ViewPropertyDetails from "./pages/ViewPropertyDetails";
@@ -14,16 +15,15 @@ import AddProperty from "./pages/AddProperty";
 import EditProperty from "./pages/EditProperty";
 import PaymentPage from "./pages/PaymentPage";
 import Transactions from "./pages/Transactions";
-
+import TransactionDetail from "./pages/TransactionDetail";
+import ListProperty from "./pages/ListProperty";
 
 // Authentication check functions
 const isAuthenticated = () => {
-  // Check if user is logged in (from localStorage, context, or state)
   return localStorage.getItem('user') !== null;
 };
 
 const getUserRole = () => {
-  // Get user role from stored user data
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   return user.role || null;
 };
@@ -35,7 +35,6 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
   }
   
   if (requiredRole && getUserRole() !== requiredRole) {
-    // If a specific role is required but user doesn't have it
     return <Navigate to="/" replace />;
   }
   
@@ -85,6 +84,14 @@ const AppRoutes = () => (
         </ProtectedRoute>
       } 
     />
+    <Route 
+      path="/properties" 
+      element={
+        <ProtectedRoute>
+          <ListProperty />
+        </ProtectedRoute>
+      } 
+    />
     <Route path="/landlord/:id" element={<LandlordProfile />} />
     <Route path="/tenant/:id" element={<TenantProfile />} />
 
@@ -128,6 +135,14 @@ const AppRoutes = () => (
           <Transactions />
         </ProtectedRoute>
       } 
+    />
+    <Route
+      path="/transactions/:id"
+      element={
+        <ProtectedRoute>
+          <TransactionDetail />
+        </ProtectedRoute>
+      }
     />
   </Routes>
 );

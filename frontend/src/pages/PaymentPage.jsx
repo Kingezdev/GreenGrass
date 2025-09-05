@@ -1,9 +1,10 @@
 // pages/PaymentPage.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import PaymentInitiation from '../components/PaymentInitiation';
 import PaymentProcessing from '../components/PaymentProcessing';
 import PaymentSuccess from '../components/PaymentSuccess';
+import propertyData from '../data/propertyData';
 
 const PaymentPage = () => {
   const { id } = useParams();
@@ -11,18 +12,50 @@ const PaymentPage = () => {
   const [step, setStep] = useState('initiation');
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [transaction, setTransaction] = useState(null);
+  const [property, setProperty] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock property data - replace with API call
-  const property = {
-    id: 1,
-    title: "Modern 3-Bedroom Apartment",
-    location: "Lekki Phase 1, Lagos",
-    price: 1800000,
-    landlord: {
-      name: "Adebola Johnson",
-      verified: true
-    }
-  };
+  // Get property data from propertyData.js
+  useEffect(() => {
+    const fetchProperty = () => {
+      try {
+        // Convert id to number since property IDs in propertyData are numbers
+        const propertyId = parseInt(id);
+        
+        // Find the property in the imported propertyData
+        const foundProperty = propertyData.find(prop => prop.id === propertyId);
+        
+        if (foundProperty) {
+          // Transform the property data to match the expected format
+          const transformedProperty = {
+            id: foundProperty.id,
+            title: foundProperty.title,
+            location: foundProperty.location,
+            price: foundProperty.price,
+            images: foundProperty.images,
+            landlord: foundProperty.landlord,
+            bedrooms: foundProperty.bedrooms,
+            bathrooms: foundProperty.bathrooms,
+            area: foundProperty.area,
+            amenities: foundProperty.amenities,
+            description: foundProperty.description
+          };
+          
+          setProperty(transformedProperty);
+        } else {
+          console.error('Property not found');
+          navigate('/properties'); // Redirect to properties page if property not found
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching property:', err);
+        setLoading(false);
+      }
+    };
+
+    fetchProperty();
+  }, [id, navigate]);
 
   const handlePaymentInitiation = (details) => {
     setPaymentDetails(details);
@@ -30,8 +63,35 @@ const PaymentPage = () => {
   };
 
   const handlePaymentSuccess = (transactionData) => {
-    setTransaction(transactionData);
+    // Create a transaction object with details
+    const newTransaction = {
+      id: `TX${Date.now()}`, // This should match what TransactionDetail expects
+      transactionId: `TX${Date.now()}`, // Keep this for backward compatibility
+      amount: property.price,
+      timestamp: new Date().toISOString(),
+      propertyId: property.id,
+      propertyTitle: property.title,
+      status: 'completed',
+      paymentMethod: paymentDetails?.paymentMethod || 'card',
+      // Add other fields that TransactionDetail might expect
+      rentAmount: property.price,
+      serviceFee: Math.round(property.price * 0.05), // 5% service fee
+      type: 'payment',
+      counterparty: property.landlord.name,
+      escrowStatus: 'held',
+      date: new Date().toISOString(),
+      propertyAddress: property.location,
+      duration: '12 months', // Default duration
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+    };
+    
+    setTransaction(newTransaction);
     setStep('success');
+    
+    // Save transaction to localStorage (in a real app, this would be an API call)
+    const existingTransactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+    localStorage.setItem('transactions', JSON.stringify([...existingTransactions, newTransaction]));
   };
 
   const handlePaymentError = (error) => {
@@ -40,7 +100,11 @@ const PaymentPage = () => {
   };
 
   const handleViewTransaction = () => {
-    navigate('/transactions');
+    if (transaction) {
+      navigate(`/transactions/${transaction.id}`);
+    } else {
+      navigate('/transactions');
+    }
   };
 
   const renderStep = () => {
@@ -50,7 +114,7 @@ const PaymentPage = () => {
           <PaymentInitiation
             property={property}
             onProceed={handlePaymentInitiation}
-            onCancel={() => navigate('/dashboard')}
+            onCancel={() => navigate(`/property/${id}`)}
           />
         );
       
@@ -58,6 +122,7 @@ const PaymentPage = () => {
         return (
           <PaymentProcessing
             paymentDetails={paymentDetails}
+            property={property}
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
           />
@@ -76,6 +141,30 @@ const PaymentPage = () => {
         return null;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Property Not Found</h2>
+          <Link
+            to="/properties"
+            className="text-green-600 hover:text-green-700 font-medium"
+          >
+            Browse Available Properties
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

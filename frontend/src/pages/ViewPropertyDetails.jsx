@@ -1,56 +1,68 @@
-// pages/PropertyDetails.jsx
+// pages/ViewPropertyDetails.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import PropertyDetailsLandlord from '../components/PropertyDetailsLandlord';
 import PropertyDetailsTenant from '../components/PropertyDetailsTenant';
+import propertyData from '../data/propertyData';
 
 const PropertyDetails = () => {
   const { id } = useParams();
   const [user, setUser] = useState(null);
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Get user data from localStorage
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
     setUser(userData);
 
-    // Mock property data - replace with API call
-    const mockProperty = {
-      id: 1,
-      title: "Modern 3-Bedroom Apartment",
-      location: "Lekki Phase 1, Lagos",
-      price: 1800000,
-      images: [
-        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80",
-        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80",
-        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80"
-      ],
-      description: "A beautiful modern apartment with stunning views of the city. Fully furnished with quality amenities including high-speed WiFi, dedicated parking space, 24/7 security, and backup generator. Perfect for professionals and small families.",
-      bedrooms: 3,
-      bathrooms: 2,
-      area: 120,
-      yearBuilt: 2020,
-      propertyType: "apartment",
-      amenities: ["WiFi", "Parking", "Security", "Generator", "Furnished", "Air Conditioning"],
-      landlord: {
-        id: 101,
-        name: "Adebola Johnson",
-        verified: true,
-        rating: 4.5,
-        reviews: 23,
-        responseRate: "95%",
-        responseTime: "within 2 hours"
-      },
-      status: "available",
-      views: 128,
-      inquiries: 15,
-      createdAt: "2023-10-15",
-      verified: true
+    // Find the property in propertyData.js based on the ID from URL params
+    const fetchProperty = () => {
+      try {
+        // Convert id to number since property IDs in propertyData are numbers
+        const propertyId = parseInt(id);
+        
+        // Find the property in the imported propertyData
+        const foundProperty = propertyData.find(prop => prop.id === propertyId);
+        
+        if (foundProperty) {
+          // Transform the property data to match the expected format
+          const transformedProperty = {
+            id: foundProperty.id,
+            title: foundProperty.title,
+            location: foundProperty.location,
+            price: foundProperty.price,
+            images: foundProperty.images,
+            description: foundProperty.description,
+            bedrooms: foundProperty.bedrooms,
+            bathrooms: foundProperty.bathrooms,
+            area: foundProperty.area,
+            yearBuilt: 2020, // Default value, you might want to add this to propertyData
+            propertyType: "apartment", // Default value, you might want to add this to propertyData
+            amenities: foundProperty.amenities,
+            landlord: foundProperty.landlord,
+            status: "available", // Default status
+            views: Math.floor(Math.random() * 300) + 50, // Random views for demo
+            inquiries: Math.floor(Math.random() * 40) + 5, // Random inquiries for demo
+            createdAt: foundProperty.availableFrom,
+            verified: foundProperty.landlord.verified
+          };
+          
+          setProperty(transformedProperty);
+        } else {
+          setError("Property not found");
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching property:', err);
+        setError('Failed to load property details');
+        setLoading(false);
+      }
     };
 
-    setProperty(mockProperty);
-    setLoading(false);
+    fetchProperty();
   }, [id]);
 
   if (loading) {
@@ -61,12 +73,21 @@ const PropertyDetails = () => {
     );
   }
 
-  if (!property) {
+  if (error || !property) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Property not found</h2>
-          <p className="text-gray-600">The property you're looking for doesn't exist.</p>
+        <div className="text-center max-w-md p-6 bg-white rounded-lg shadow-sm border">
+          <div className="text-6xl mb-4">🏠</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Property Not Found</h2>
+          <p className="text-gray-600 mb-4">
+            {error || "The property you're looking for doesn't exist or may have been removed."}
+          </p>
+          <a
+            href="/properties"
+            className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-medium"
+          >
+            Browse Properties
+          </a>
         </div>
       </div>
     );

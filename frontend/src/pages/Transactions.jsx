@@ -339,9 +339,12 @@ const Transactions = () => {
                       Transaction ID: {transaction.id}
                     </div>
                     <div className="flex space-x-2">
-                      <button className="text-green-600 hover:text-green-700 text-sm font-medium">
+                      <Link 
+                        to={`/transactions/${transaction.id}`}
+                        className="text-green-600 hover:text-green-700 text-sm font-medium"
+                      >
                         View Details
-                      </button>
+                      </Link>
                       <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
                         Receipt
                       </button>

@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import ConfirmationModal from './ConfirmationModal';
 
 const DashboardPropertyCard = ({ property, onEdit, onDelete }) => {
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
@@ -27,7 +26,7 @@ const DashboardPropertyCard = ({ property, onEdit, onDelete }) => {
     return styles[status] || styles.inactive;
   };
 
-  const handleEditClick = () => {
+  const handleQuickEditClick = () => {
     setIsEditing(true);
     setEditFormData({
       title: property.title,
@@ -36,12 +35,12 @@ const DashboardPropertyCard = ({ property, onEdit, onDelete }) => {
     });
   };
 
-  const handleSave = () => {
+  const handleQuickSave = () => {
     onEdit(property.id, editFormData);
     setIsEditing(false);
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelQuickEdit = () => {
     setIsEditing(false);
     setEditFormData({
       title: property.title,
@@ -81,7 +80,7 @@ const DashboardPropertyCard = ({ property, onEdit, onDelete }) => {
           {/* Property Details */}
           <div className="flex-1 min-w-0">
             {isEditing ? (
-              // Edit Mode
+              // Quick Edit Mode
               <div className="space-y-3">
                 <input
                   type="text"
@@ -113,13 +112,13 @@ const DashboardPropertyCard = ({ property, onEdit, onDelete }) => {
                 </div>
                 <div className="flex space-x-2">
                   <button
-                    onClick={handleSave}
+                    onClick={handleQuickSave}
                     className="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700"
                   >
                     Save
                   </button>
                   <button
-                    onClick={handleCancelEdit}
+                    onClick={handleCancelQuickEdit}
                     className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-400"
                   >
                     Cancel
@@ -183,12 +182,12 @@ const DashboardPropertyCard = ({ property, onEdit, onDelete }) => {
                     >
                       View
                     </Link>
-                    <button 
-                      onClick={handleEditClick}
+                    <Link
+                      to={`/edit-property/${property.id}`}
                       className="text-blue-600 hover:text-blue-700 text-xs font-medium px-2 py-1 hover:bg-blue-50 rounded"
                     >
                       Edit
-                    </button>
+                    </Link>
                     <button 
                       onClick={handleDeleteClick}
                       className="text-red-600 hover:text-red-700 text-xs font-medium px-2 py-1 hover:bg-red-50 rounded"

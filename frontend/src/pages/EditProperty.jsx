@@ -1,6 +1,7 @@
 // pages/EditProperty.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import propertyData from '../data/propertyData';
 
 const EditProperty = () => {
   const { id } = useParams();
@@ -30,38 +31,49 @@ const EditProperty = () => {
     }
   });
 
-  // Mock property data - replace with API call
+  // Get property data from propertyData.js
   useEffect(() => {
     const fetchProperty = async () => {
       try {
         // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        const mockProperty = {
-          id: 1,
-          title: "Modern 3-Bedroom Apartment",
-          location: "Lekki Phase 1, Lagos",
-          price: 1800000,
-          bedrooms: 3,
-          bathrooms: 2,
-          area: 120,
-          propertyType: "apartment",
-          status: "active",
-          description: "A beautiful modern apartment with stunning views of the city. Fully furnished with quality amenities.",
-          amenities: {
-            wifi: true,
-            parking: true,
-            security: true,
-            generator: true,
-            water: false,
-            furniture: true,
-            ac: true,
-            pool: false,
-            gym: false
-          }
-        };
-
-        setFormData(mockProperty);
+        // Find property in propertyData
+        const property = propertyData.find(p => p.id === parseInt(id));
+        
+        if (property) {
+          // Transform property data to match form structure
+          const transformedProperty = {
+            id: property.id,
+            title: property.title,
+            location: property.location,
+            price: property.price,
+            bedrooms: property.bedrooms,
+            bathrooms: property.bathrooms,
+            area: property.area,
+            propertyType: 'apartment', // Default, you might want to add this to your propertyData
+            status: 'active', // Default status
+            description: property.description,
+            amenities: {
+              wifi: property.amenities.includes('WiFi'),
+              parking: property.amenities.includes('Parking'),
+              security: property.amenities.includes('Security'),
+              generator: property.amenities.includes('Generator'),
+              water: property.amenities.includes('Water Supply'),
+              furniture: false, // Not in propertyData
+              ac: property.amenities.includes('Air Conditioning'),
+              pool: property.amenities.includes('Swimming Pool'),
+              gym: property.amenities.includes('Gym')
+            }
+          };
+          
+          setFormData(transformedProperty);
+        } else {
+          console.error('Property not found');
+          // Redirect to dashboard if property not found
+          navigate('/dashboard');
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error('Error fetching property:', error);
@@ -70,7 +82,7 @@ const EditProperty = () => {
     };
 
     fetchProperty();
-  }, [id]);
+  }, [id, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -136,7 +148,7 @@ const EditProperty = () => {
   const amenitiesList = [
     { value: 'wifi', label: 'WiFi' },
     { value: 'parking', label: 'Parking' },
-    { value: 'security', label: 'Security' },
+    {value: 'security', label: 'Security' },
     { value: 'generator', label: 'Generator' },
     { value: 'water', label: '24/7 Water' },
     { value: 'furniture', label: 'Furnished' },

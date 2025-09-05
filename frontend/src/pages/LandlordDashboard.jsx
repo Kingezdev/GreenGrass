@@ -3,67 +3,38 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardPropertyCard from '../components/DashboardPropertyCard';
 import DashboardSearch from '../components/DashboardSearch';
+import propertyData from '../data/propertyData';
 
 const LandlordDashboard = ({ user }) => {
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock data
+  // Use data from propertyData.js
   useEffect(() => {
-    const mockProperties = [
-      {
-        id: 1,
-        title: "Modern 3-Bedroom Apartment",
-        location: "Lekki Phase 1, Lagos",
-        price: 1800000,
-        image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80",
-        status: "active",
-        views: 128,
-        inquiries: 15,
-        rating: 4.5,
-        bedrooms: 3,
-        bathrooms: 2,
-        area: 120,
-        verified: true,
-        createdAt: "2023-10-15"
-      },
-      {
-        id: 2,
-        title: "Cozy 2-Bedroom Flat",
-        location: "GRA, Ibadan",
-        price: 850000,
-        image: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=784&q=80",
-        status: "pending",
-        views: 45,
-        inquiries: 8,
-        rating: 4.0,
-        bedrooms: 2,
-        bathrooms: 1,
-        area: 80,
-        verified: false,
-        createdAt: "2023-11-20"
-      },
-      {
-        id: 3,
-        title: "Luxury Villa VI",
-        location: "Victoria Island, Lagos",
-        price: 3500000,
-        image: "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80",
-        status: "rented",
-        views: 256,
-        inquiries: 32,
-        rating: 4.8,
-        bedrooms: 4,
-        bathrooms: 3,
-        area: 250,
-        verified: true,
-        createdAt: "2023-09-05"
-      }
-    ];
+    // Transform property data to match the expected format
+    const landlordProperties = propertyData.map(property => ({
+      id: property.id,
+      title: property.title,
+      location: property.location,
+      price: property.price,
+      image: property.images[0],
+      status: "active", // Default status
+      views: Math.floor(Math.random() * 300) + 50, // Random views for demo
+      inquiries: Math.floor(Math.random() * 40) + 5, // Random inquiries for demo
+      rating: property.landlord.rating,
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      area: property.area,
+      verified: property.landlord.verified,
+      createdAt: property.availableFrom,
+      description: property.description,
+      amenities: property.amenities,
+      landlord: property.landlord
+    }));
 
-    setProperties(mockProperties);
-    setFilteredProperties(mockProperties);
+    setProperties(landlordProperties);
+    setFilteredProperties(landlordProperties);
     setLoading(false);
   }, []);
 
@@ -75,12 +46,13 @@ const LandlordDashboard = ({ user }) => {
       const term = filters.searchTerm.toLowerCase();
       results = results.filter(prop =>
         prop.title.toLowerCase().includes(term) ||
-        prop.location.toLowerCase().includes(term)
+        prop.location.toLowerCase().includes(term) ||
+        prop.description.toLowerCase().includes(term)
       );
     }
 
     // Status filter
-    if (filters.status) {
+    if (filters.status && filters.status !== 'all') {
       results = results.filter(prop => prop.status === filters.status);
     }
 
@@ -105,6 +77,8 @@ const LandlordDashboard = ({ user }) => {
         results.sort((a, b) => b.inquiries - a.inquiries);
         break;
       default:
+        // Default sort by newest
+        results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         break;
     }
 
@@ -147,18 +121,85 @@ const LandlordDashboard = ({ user }) => {
     alert('Property deleted successfully!');
   };
 
+  // Calculate stats based on properties
+  const stats = {
+    totalProperties: properties.length,
+    activeProperties: properties.filter(p => p.status === 'active').length,
+    rentedProperties: properties.filter(p => p.status === 'rented').length,
+    pendingProperties: properties.filter(p => p.status === 'pending').length,
+    totalViews: properties.reduce((sum, prop) => sum + prop.views, 0),
+    totalInquiries: properties.reduce((sum, prop) => sum + prop.inquiries, 0),
+    averageRating: properties.length > 0 
+      ? (properties.reduce((sum, prop) => sum + prop.rating, 0) / properties.length).toFixed(1)
+      : 0
+  };
 
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* ... existing stats code ... */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 text-sm font-bold">{stats.totalProperties}</span>
+              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Total Properties</p>
+              <p className="text-lg font-semibold text-gray-900">{stats.totalProperties}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 text-sm font-bold">{stats.activeProperties}</span>
+              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Active Listings</p>
+              <p className="text-lg font-semibold text-gray-900">{stats.activeProperties}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <span className="text-purple-600 text-sm font-bold">{stats.totalViews}</span>
+              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Total Views</p>
+              <p className="text-lg font-semibold text-gray-900">{stats.totalViews}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <span className="text-yellow-600 text-sm font-bold">{stats.averageRating}</span>
+              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Avg. Rating</p>
+              <p className="text-lg font-semibold text-gray-900">{stats.averageRating}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Search Section */}
       <DashboardSearch 
         onSearch={handleSearch}
-        placeholder="Search properties by title or location..."
+        placeholder="Search properties by title, location or description..."
+        showFilters={true}
       />
 
       {/* Properties List */}
@@ -216,7 +257,47 @@ const LandlordDashboard = ({ user }) => {
 
       {/* Recent Messages */}
       <div className="bg-white rounded-lg shadow-sm border">
-        {/* ... existing messages code ... */}
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold">Recent Messages</h2>
+        </div>
+        <div className="p-6">
+          {mockMessages.length > 0 ? (
+            <div className="space-y-4">
+              {mockMessages.map((message) => (
+                <div key={message.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-green-600 font-medium text-sm">
+                        {message.sender.split(' ').map(n => n[0]).join('')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium text-gray-900">{message.sender}</h3>
+                      <span className="text-sm text-gray-500">{message.time}</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">{message.property}</p>
+                    <p className="text-gray-700 mt-2">{message.message}</p>
+                  </div>
+                  {message.unread && (
+                    <div className="flex-shrink-0">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        New
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-gray-400 text-4xl mb-4">💬</div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">No messages yet</h3>
+              <p className="text-gray-500">You'll see incoming messages here</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
