@@ -1,5 +1,6 @@
 import React from "react";
 import { useState, useEffect } from 'react';
+import { AuthProvider } from './context/AuthContext';
 import AppRoutes from "./routes";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -15,13 +16,15 @@ function App() {
     }
   }, []);
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar user={user} setUser={setUser} />
-      <div className="flex-1">
-        <AppRoutes />
+    <AuthProvider>
+      <div className="min-h-screen flex flex-col">
+        <Navbar user={user} setUser={setUser} />
+        <div className="flex-1">
+          <AppRoutes />
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
+    </AuthProvider>
   );
 }
 

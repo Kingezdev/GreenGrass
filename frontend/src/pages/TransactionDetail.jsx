@@ -10,57 +10,11 @@ const TransactionDetail = () => {
   const { id } = useParams();
 
   useEffect(() => {
-    // Get transactions from localStorage or use mock data
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    // Get transactions from localStorage
     const storedTransactions = JSON.parse(localStorage.getItem('transactions') || '[]');
     
-    // If no transactions in localStorage, use mock data based on user role
-    let transactions = storedTransactions;
-    
-    if (transactions.length === 0) {
-      transactions = [
-        {
-          id: 'TX001',
-          propertyId: 1,
-          propertyTitle: 'Modern 3-Bedroom Apartment',
-          amount: 1890000,
-          rentAmount: 1800000,
-          serviceFee: 90000,
-          type: userData.role === 'tenant' ? 'payment' : 'receipt',
-          status: 'completed',
-          date: '2023-11-15T10:30:00Z',
-          timestamp: '2023-11-15T10:30:00Z',
-          counterparty: userData.role === 'tenant' ? 'Adebola Johnson' : 'Tunde Adeyemi',
-          paymentMethod: 'bank_transfer',
-          escrowStatus: 'released',
-          propertyAddress: '123 Victoria Island, Lagos',
-          duration: '12 months',
-          startDate: '2023-12-01',
-          endDate: '2024-11-30'
-        },
-        {
-          id: 'TX002',
-          propertyId: 2,
-          propertyTitle: 'Cozy 2-Bedroom Flat',
-          amount: 892500,
-          rentAmount: 850000,
-          serviceFee: 42500,
-          type: userData.role === 'tenant' ? 'payment' : 'receipt',
-          status: 'pending',
-          date: '2023-11-20T14:45:00Z',
-          timestamp: '2023-11-20T14:45:00Z',
-          counterparty: userData.role === 'tenant' ? 'Chinedu Okoro' : 'Funke Adebayo',
-          paymentMethod: 'card',
-          escrowStatus: 'held',
-          propertyAddress: '456 Lekki Phase 1, Lagos',
-          duration: '6 months',
-          startDate: '2023-12-15',
-          endDate: '2024-06-15'
-        }
-      ];
-    }
-    
-    const foundTransaction = transactions.find(tx => tx.id === id);
+    // Find the transaction by ID
+    const foundTransaction = storedTransactions.find(tx => tx.id === id);
     
     if (foundTransaction) {
       setTransaction(foundTransaction);
@@ -80,6 +34,7 @@ const TransactionDetail = () => {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-NG', {
       year: 'numeric',
       month: 'long',
@@ -109,7 +64,7 @@ const TransactionDetail = () => {
           <ul className="text-left text-gray-600 mb-6 list-disc pl-5">
             <li>The transaction ID is incorrect</li>
             <li>The transaction has been deleted</li>
-            <li>There's a temporary server issue</li>
+            <li>You haven't made any transactions yet</li>
           </ul>
           <Link 
             to="/transactions" 
@@ -149,7 +104,7 @@ const TransactionDetail = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2">Property</h3>
               <p className="text-gray-900">{transaction.propertyTitle}</p>
-              <p className="text-sm text-gray-600">{transaction.propertyAddress}</p>
+              <p className="text-sm text-gray-600">{transaction.propertyAddress || property?.location || 'N/A'}</p>
               {property && (
                 <Link 
                   to={`/property/${property.id}`}
@@ -162,7 +117,7 @@ const TransactionDetail = () => {
             
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2">Lease Duration</h3>
-              <p className="text-gray-900">{transaction.duration}</p>
+              <p className="text-gray-900">{transaction.duration || 'N/A'}</p>
               <p className="text-sm text-gray-600">
                 {formatDate(transaction.startDate)} - {formatDate(transaction.endDate)}
               </p>
@@ -171,9 +126,11 @@ const TransactionDetail = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2">Amount</h3>
               <p className="text-2xl font-bold text-green-600">₦{formatNumber(transaction.amount)}</p>
-              <p className="text-sm text-gray-600">
-                Rent: ₦{formatNumber(transaction.rentAmount)} + Fee: ₦{formatNumber(transaction.serviceFee)}
-              </p>
+              {transaction.rentAmount && transaction.serviceFee && (
+                <p className="text-sm text-gray-600">
+                  Rent: ₦{formatNumber(transaction.rentAmount)} + Fee: ₦{formatNumber(transaction.serviceFee)}
+                </p>
+              )}
             </div>
             
             <div>
@@ -185,27 +142,31 @@ const TransactionDetail = () => {
               }`}>
                 {transaction.status}
               </span>
-              <p className="text-sm text-gray-600 mt-1">Escrow: {transaction.escrowStatus}</p>
+              {transaction.escrowStatus && (
+                <p className="text-sm text-gray-600 mt-1">Escrow: {transaction.escrowStatus}</p>
+              )}
             </div>
             
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2">Payment Method</h3>
-              <p className="text-gray-900">{transaction.paymentMethod.replace('_', ' ').toUpperCase()}</p>
+              <p className="text-gray-900">
+                {transaction.paymentMethod ? transaction.paymentMethod.replace('_', ' ').toUpperCase() : 'N/A'}
+              </p>
             </div>
             
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2">Date & Time</h3>
-              <p className="text-gray-900">{formatDate(transaction.date)}</p>
+              <p className="text-gray-900">{formatDate(transaction.date || transaction.timestamp)}</p>
             </div>
             
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2">Counterparty</h3>
-              <p className="text-gray-900">{transaction.counterparty}</p>
+              <p className="text-gray-900">{transaction.counterparty || 'N/A'}</p>
             </div>
 
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2">Transaction Type</h3>
-              <p className="text-gray-900">{transaction.type}</p>
+              <p className="text-gray-900">{transaction.type || 'N/A'}</p>
             </div>
           </div>
         </div>
@@ -221,6 +182,14 @@ const TransactionDetail = () => {
               </div>
               
               <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Specifications</h3>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <p>{property.bedrooms} Bedrooms • {property.bathrooms} Bathrooms</p>
+                  {property.area && <p>{property.area} m²</p>}
+                </div>
+              </div>
+              
+              <div>
                 <h3 className="text-sm font-medium text-gray-500 mb-2">Amenities</h3>
                 <div className="flex flex-wrap gap-2">
                   {property.amenities.map((amenity, index) => (
@@ -229,6 +198,16 @@ const TransactionDetail = () => {
                     </span>
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Landlord</h3>
+                <p className="text-gray-900">{property.landlord.name}</p>
+                {property.landlord.verified && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                    Verified
+                  </span>
+                )}
               </div>
             </div>
           </div>

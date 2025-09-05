@@ -2,12 +2,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import UserMenu from './UserMenu';
+import { useAuth } from '../context/AuthContext'; // Import the auth context
 
-const Navbar = ({ user, setUser }) => {
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-  };
+const Navbar = () => {
+  const { user, logout } = useAuth(); // Get user and logout from context
 
   return (
     <nav className="bg-white shadow-md border-b">
@@ -63,7 +61,7 @@ const Navbar = ({ user, setUser }) => {
                 </Link>
 
                 {/* User Menu */}
-                <UserMenu user={user} onLogout={handleLogout} />
+                <UserMenu user={user} onLogout={logout} />
               </>
             ) : (
               <div className="flex items-center space-x-3">

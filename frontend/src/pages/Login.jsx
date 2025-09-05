@@ -1,13 +1,16 @@
+// pages/Login.jsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("tenant"); // Default role
+  const [role, setRole] = useState("tenant");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   // Mock user data 
   const mockUsers = {
@@ -54,8 +57,8 @@ const Login = () => {
         return;
       }
 
-      // Store user data 
-      localStorage.setItem('user', JSON.stringify(user));
+      // Store user data and update auth context
+      login(user);
 
       // Redirect to verification
       navigate('/verification');
@@ -76,8 +79,8 @@ const Login = () => {
       setPassword("password123");
       setRole(user.role);
       
-      // Store user data
-      localStorage.setItem('user', JSON.stringify(user));
+      // Store user data and update auth context
+      login(user);
       
       // Redirect to dashboard
       navigate('/dashboard');
