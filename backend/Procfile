@@ -1,0 +1,1 @@
+web: gunicorn HouseListing_Backend.wsgi:application --log-file -

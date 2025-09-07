@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: greengrass-backend
+    env: python
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate"
+    startCommand: "gunicorn HouseListing_Backend.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: HouseListing_Backend.settings
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: DEBUG
+        value: "False"
+      # Add other environment variables here
+      # - key: DB_HOST
+      #   value: your-db-host
+      # - key: DB_NAME
+      #   value: your-db-name
+      # - key: DB_USER
+      #   value: your-db-user
+      # - key: DB_PASSWORD
+      #   value: your-db-password

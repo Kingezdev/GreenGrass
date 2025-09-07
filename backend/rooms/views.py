@@ -1,23 +1,25 @@
 from rest_framework import generics, permissions, status, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import action
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Q
-from .models import Property, PropertyImage, PropertyReview, LandlordReview, Favorite, PropertyView
+from django.db.models import Q, Count, F, Case, When, Value, IntegerField
+from django.db import transaction
+from .models import Property, PropertyImage, PropertyReview, LandlordReview, Favorite, PropertyView, Room
 from .serializers import (
-    PropertySerializer, PropertyCreateSerializer, 
-    PropertyListSerializer, PropertyImageSerializer,
-    PropertyReviewSerializer, PropertyReviewCreateSerializer,
+    PropertySerializer, PropertyCreateSerializer, PropertyUpdateSerializer,
+    PropertyListSerializer, PropertyImageSerializer, RoomSerializer,
+    PropertyReviewSerializer, PropertyReviewCreateSerializer, RoomCreateUpdateSerializer,
     LandlordReviewSerializer, LandlordReviewCreateSerializer,
     FavoriteSerializer, PropertyViewSerializer
 )
 from accounts.models import UserProfile
-from django.contrib.auth.models import User
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class IsLandlordPermission(permissions.BasePermission):
     """
@@ -279,17 +281,65 @@ class FavoriteDeleteView(generics.DestroyAPIView):
         return get_object_or_404(Favorite, tenant=self.request.user, property_id=property_id)
 
 @method_decorator(csrf_exempt, name='dispatch')
+class RoomViewSet(ModelViewSet):
+    """
+    ViewSet for managing rooms within a property
+    """
+    permission_classes = [IsLandlordPermission]
+    
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return RoomCreateUpdateSerializer
+        return RoomSerializer
+    
+    def get_queryset(self):
+        property_id = self.kwargs.get('property_id')
+        return Room.objects.filter(
+            property_id=property_id,
+            property__landlord=self.request.user
+        ).select_related('property')
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['property_id'] = self.kwargs.get('property_id')
+        return context
+    
+    @action(detail=True, methods=['post'])
+    def set_status(self, request, property_id=None, pk=None):
+        """Set the status of a room (available, occupied, maintenance)"""
+        room = self.get_object()
+        new_status = request.data.get('status')
+        
+        if not new_status or new_status not in dict(Room.STATUS_CHOICES):
+            return Response(
+                {'status': 'Invalid status'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        room.status = new_status
+        room.save()
+        return Response({'status': 'Status updated'})
+    
+    @action(detail=False, methods=['get'])
+    def available(self, request, property_id=None):
+        """List all available rooms in the property"""
+        queryset = self.filter_queryset(
+            self.get_queryset().filter(status='available')
+        )
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+@method_decorator(csrf_exempt, name='dispatch')
 class PropertyViewListView(generics.ListAPIView):
     """
     List all views for a specific property
     """
     serializer_class = PropertyViewSerializer
-    permission_classes = [IsLandlordPermission]  # Only property owner can view their property's views
+    permission_classes = [IsLandlordPermission]
     
     def get_queryset(self):
         property_id = self.kwargs.get('property_id')
-        property = get_object_or_404(Property, id=property_id)
-        # Ensure the requesting user is the property owner
-        if property.landlord != self.request.user:
-            self.permission_denied(self.request, message="You can only view views for your own properties.")
-        return PropertyView.objects.filter(property_id=property_id).select_related('viewer', 'property')
+        return PropertyView.objects.filter(
+            property_id=property_id,
+            property__landlord=self.request.user
+        ).select_related('viewer').order_by('-viewed_at')

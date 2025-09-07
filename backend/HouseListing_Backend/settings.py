@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+import dj_database_url
 load_dotenv()
 
 print("\n=== Environment Variables ===")
@@ -42,6 +43,7 @@ SESSION_COOKIE_SAMESITE = 'None' if SESSION_COOKIE_SECURE else 'Lax'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://greengrass.onrender.com"
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -155,19 +157,11 @@ LOGGING = {
 }
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'client_encoding': 'UTF8',
-            'sslmode': 'prefer',
-        },
-    }
+    "default": dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
 # Test database connection on startup

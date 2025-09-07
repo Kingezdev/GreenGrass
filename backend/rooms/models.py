@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from accounts.models import UserProfile
 
 class Property(models.Model):
@@ -17,23 +18,35 @@ class Property(models.Model):
         ('maintenance', 'Under Maintenance'),
     ]
     
+    RENTAL_TYPES = [
+        ('full_property', 'Full Property'),
+        ('rooms_only', 'Rooms Only'),
+        ('both', 'Both Full Property and Rooms')
+    ]
+    
     landlord = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='room_properties')
     title = models.CharField(max_length=200)
     property_type = models.CharField(max_length=20, choices=PROPERTY_TYPES, default='apartment')
+    rental_type = models.CharField(max_length=20, choices=RENTAL_TYPES, default='full_property', 
+                                 help_text="Specify if the property is rented as a whole or by rooms")
     location = models.CharField(max_length=300)
     address = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2, 
+                              help_text="Base price for full property rental")
     bedrooms = models.PositiveIntegerField(default=1)
     bathrooms = models.PositiveIntegerField(default=1)
-    area_sqft = models.PositiveIntegerField(help_text="Area in square feet")
+    area_sqft = models.PositiveIntegerField(help_text="Total area in square feet")
     description = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
     
-    # Amenities
+    # Amenities (shared by all rooms in the property)
     furnished = models.BooleanField(default=False)
     parking = models.BooleanField(default=False)
     pets_allowed = models.BooleanField(default=False)
-    utilities_included = models.BooleanField(default=False)
+    utilities_included = models.BooleanField(
+        default=False, 
+        help_text="If checked, utilities are included in the room prices"
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -43,6 +56,53 @@ class Property(models.Model):
         
     def __str__(self):
         return f"{self.title} - {self.location} (${self.price})"
+    
+    def has_available_rooms(self):
+        """Check if there are any available rooms in the property"""
+        if self.rental_type == 'full_property':
+            return self.status == 'available'
+        return self.rooms.filter(status='available').exists()
+
+class Room(models.Model):
+    ROOM_TYPES = [
+        ('single', 'Single Room'),
+        ('selfcon', 'Self-Contained'),
+        ('room_toilet', 'Room & Toilet'),
+        ('room_kitchen', 'Room & Kitchen'),
+        ('shared_room', 'Shared Room')
+    ]
+    
+    STATUS_CHOICES = [
+        ('available', 'Available'),
+        ('occupied', 'Occupied'),
+        ('maintenance', 'Under Maintenance'),
+    ]
+    
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='rooms')
+    room_type = models.CharField(max_length=20, choices=ROOM_TYPES, default='single')
+    room_number = models.CharField(max_length=20, help_text="Room number or identifier")
+    price = models.DecimalField(max_digits=10, decimal_places=2, 
+                              validators=[MinValueValidator(0)])
+    area_sqft = models.PositiveIntegerField(help_text="Room area in square feet")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
+    description = models.TextField(blank=True, null=True)
+    
+    # Room-specific amenities
+    has_bathroom = models.BooleanField(default=False)
+    has_kitchen = models.BooleanField(default=False)
+    has_balcony = models.BooleanField(default=False)
+    has_ac = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['room_number']
+        unique_together = ['property', 'room_number']
+    
+    def __str__(self):
+        return f"{self.get_room_type_display()} - {self.room_number} (${self.price})"
+
 
 class PropertyImage(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='images')
