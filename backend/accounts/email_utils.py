@@ -59,24 +59,10 @@ def send_verification_email(user, request=None, **kwargs):
     # Create a new verification token
     token_obj = EmailVerificationToken.objects.create(user=user)
     
-    # Build verification URL using settings
-    from django.conf import settings
-    try:
-        # Get the base URL from settings
-        backend_url = getattr(settings, 'BACKEND_URL', 'http://localhost:8000')
-        
-        # Generate the verification path using the URL name
-        verification_path = reverse('verify-email', kwargs={'token': str(token_obj.token)})
-        
-        # Ensure the backend URL doesn't end with a slash
-        verification_url = f"{backend_url.rstrip('/')}{verification_path}"
-        
-        logger.info(f"Generated verification URL: {verification_url}")
-        
-    except Exception as e:
-        logger.error(f"Error generating verification URL: {str(e)}", exc_info=True)
-        # Fallback to a default URL if there's an error
-        verification_url = f"https://greengrass-backend.onrender.com/api/accounts/verify-email/{token_obj.token}/"
+    # Always use production URL for email verification
+    production_url = 'https://greengrass-backend.onrender.com'
+    verification_url = f"{production_url}/api/accounts/verify-email/{token_obj.token}/"
+    logger.info(f"Using production verification URL: {verification_url}")
     
     # Prepare email context
     site_name = getattr(settings, 'SITE_NAME', 'Our Site')

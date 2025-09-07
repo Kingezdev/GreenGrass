@@ -191,24 +191,38 @@ class EmailVerificationView(APIView):
         Handle email verification link from email
         Renders success or error template based on verification result
         """
+        from django.conf import settings
+        
         try:
             token_obj = EmailVerificationToken.objects.get(token=token, is_used=False)
-
+            
             if not token_obj.is_valid():
-                logger.warning(f"Expired token attempt: {token}")
-                return render(request, 'verification/error.html', 
-                           {'error': 'expired'}, 
-                           status=400)
+                logger.warning(f"Expired token attempt (GET): {token}")
+                return render(
+                    request, 
+                    'emails/verification_error.html',
+                    {'error': 'This verification link has expired. Please request a new one.'},
+                    status=400
+                )
 
+            # Verify the token
             user = self.verify_token(token_obj)
-            return render(request, 'verification/success.html', 
-                        {'user': user, 'token': token})
+            
+            # Render success template
+            return render(
+                request,
+                'emails/verification_success.html',
+                {'email': user.email, 'site_name': getattr(settings, 'SITE_NAME', 'Our Site')}
+            )
 
-        except (EmailVerificationToken.DoesNotExist, UserProfile.DoesNotExist):
-            logger.warning(f"Invalid token attempt: {token}")
-            return render(request, 'verification/error.html', 
-                        {'error': 'invalid'}, 
-                        status=400)
+        except EmailVerificationToken.DoesNotExist:
+            logger.warning(f"Invalid token attempt (GET): {token}")
+            return render(
+                request,
+                'emails/verification_error.html',
+                {'error': 'Invalid verification link. Please check the link or request a new one.'},
+                status=400
+            )
 
     def post(self, request, token):
         """
@@ -220,16 +234,22 @@ class EmailVerificationView(APIView):
             if not token_obj.is_valid():
                 logger.warning(f"Expired token attempt (POST): {token}")
                 return Response(
-                    {'error': 'Verification link has expired. Please request a new one.'},
+                    {'status': 'error', 'message': 'Verification link has expired. Please request a new one.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
             self.verify_token(token_obj)
-            return Response({'message': 'Email verified successfully'}, status=status.HTTP_200_OK)
+            return Response(
+                {'status': 'success', 'message': 'Email verified successfully'}, 
+                status=status.HTTP_200_OK
+            )
 
         except EmailVerificationToken.DoesNotExist:
             logger.warning(f"Invalid token attempt (POST): {token}")
-            return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'status': 'error', 'message': 'Invalid verification token'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         except UserProfile.DoesNotExist:
             logger.error(f"User profile not found for token: {token}")
@@ -241,18 +261,21 @@ class ResendVerificationEmailView(APIView):
     Resend verification email to the user
     """
     permission_classes = [permissions.AllowAny]  # Allow unauthenticated access for this endpoint
+    throttle_classes = [throttling.AnonRateThrottle]  # Add rate limiting
     
     def post(self, request):
+        from django.conf import settings
+        
         if not settings.EMAIL_VERIFICATION_ENABLED:
             return Response(
-                {'error': 'Email verification is not enabled'},
+                {'status': 'error', 'message': 'Email verification is not enabled'},
                 status=status.HTTP_400_BAD_REQUEST
             )
             
         email = request.data.get('email')
         if not email:
             return Response(
-                {'error': 'Email is required'},
+                {'status': 'error', 'message': 'Email is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -262,7 +285,7 @@ class ResendVerificationEmailView(APIView):
             
             if profile.email_verified:
                 return Response(
-                    {'message': 'Email is already verified'},
+                    {'status': 'success', 'message': 'Email is already verified'},
                     status=status.HTTP_200_OK
                 )
                 
@@ -274,15 +297,21 @@ class ResendVerificationEmailView(APIView):
             
             if last_sent:
                 return Response(
-                    {'error': 'Verification email was recently sent. Please wait before requesting another.'},
+                    {'status': 'error', 'message': 'Verification email was recently sent. Please wait before requesting another.'},
                     status=status.HTTP_429_TOO_MANY_REQUESTS
                 )
             
-            # Send verification email with request to ensure proper URL generation
-            send_verification_email(user, request=request)
+            # Invalidate any existing tokens
+            EmailVerificationToken.objects.filter(user=user, is_used=False).update(is_used=True)
+            
+            # Send verification email (no need to pass request as we're using production URL)
+            send_verification_email(user)
+            
+            logger.info(f"Resent verification email to {email}")
             
             return Response(
                 {
+                    'status': 'success',
                     'message': 'Verification email has been resent. Please check your inbox.',
                     'email': user.email  # For confirmation
                 },
@@ -291,8 +320,10 @@ class ResendVerificationEmailView(APIView):
             
         except User.DoesNotExist:
             # For security reasons, don't reveal if the email exists or not
+            logger.warning(f"Resend verification attempt for non-existent email: {email}")
             return Response(
                 {
+                    'status': 'success',
                     'message': 'If an account with this email exists, a verification email has been sent.'
                 },
                 status=status.HTTP_200_OK
