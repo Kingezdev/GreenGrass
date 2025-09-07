@@ -39,12 +39,18 @@ CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
 CSRF_COOKIE_SAMESITE = 'None' if CSRF_COOKIE_SECURE else 'Lax'
 SESSION_COOKIE_SAMESITE = 'None' if SESSION_COOKIE_SECURE else 'Lax'
 
+# Frontend URL
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://loom-in.vercel.app')
+
+# Backend URL
+BACKEND_URL = 'https://greengrass-backend.onrender.com'
+
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://greengrass.onrender.com",
-    "https://loom-in.vercel.app"
+    FRONTEND_URL
 ]
 CORS_ALLOW_CREDENTIALS = True
 

@@ -30,7 +30,8 @@ class RegisterView(generics.CreateAPIView):
         
         # Send verification email if enabled
         if settings.EMAIL_VERIFICATION_ENABLED:
-            send_verification_email(user)
+            # Pass request to ensure proper URL generation
+            send_verification_email(user, request)
         
         # Get the user's profile
         profile = user.profile
@@ -176,7 +177,8 @@ class EmailVerificationView(APIView):
 
     def get(self, request, token):
         """
-        Verify email via browser link (renders HTML response)
+        Handle email verification link from email
+        Renders success or error template based on verification result
         """
         try:
             token_obj = EmailVerificationToken.objects.get(token=token, is_used=False)
@@ -265,8 +267,8 @@ class ResendVerificationEmailView(APIView):
                     status=status.HTTP_429_TOO_MANY_REQUESTS
                 )
             
-            # Send verification email
-            send_verification_email(user)
+            # Send verification email with request to ensure proper URL generation
+            send_verification_email(user, request=request)
             
             return Response(
                 {

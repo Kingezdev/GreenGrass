@@ -46,6 +46,8 @@ def send_verification_email(user, request=None, **kwargs):
     Returns:
         bool: True if email was sent successfully
     """
+    from django.conf import settings
+    
     # Check rate limit
     if not check_email_rate_limit(user.email):
         logger.warning(f"Rate limit exceeded for email: {user.email}")
@@ -57,22 +59,21 @@ def send_verification_email(user, request=None, **kwargs):
     # Create a new verification token
     token_obj = EmailVerificationToken.objects.create(user=user)
     
-    # Build verification URL using backend URL
+    # Build verification URL using production backend URL
     verification_path = reverse('verify-email', kwargs={'token': str(token_obj.token)})
-    if request:
-        verification_url = request.build_absolute_uri(verification_path)
-    else:
-        # Use backend URL directly instead of frontend URL
-        backend_url = settings.BACKEND_URL or 'http://localhost:8000'
-        verification_url = f"{backend_url}{verification_path}"
-    
+    verification_url = f"https://greengrass-backend.onrender.com{verification_path}"
     # Prepare email context
+    site_name = getattr(settings, 'SITE_NAME', 'Our Site')
+    support_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com')
+    expiry_hours = settings.EMAIL_VERIFICATION_TOKEN_EXPIRY // 3600  # Convert to hours
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'https://loom-in.vercel.app')
+    
     context = {
         'user': user,
         'verification_url': verification_url,
-        'expiry_hours': 24,
-        'support_email': settings.DEFAULT_FROM_EMAIL,
-        'site_name': getattr(settings, 'SITE_NAME', 'Our Site'),
+        'site_name': site_name,
+        'support_email': support_email,
+        'expiry_hours': expiry_hours,
     }
     
     subject = f"Verify Your Email Address - {context['site_name']}"
