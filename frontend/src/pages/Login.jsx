@@ -96,7 +96,7 @@ const Login = () => {
       >
         <div className="absolute inset-0 bg-black/90 lg:hidden"></div>
       </div>
-      <div className="w-1/2 h-full hidden lg:block relative">
+      <div className="w-1/2 h-screen hidden lg:block relative">
         <div className="absolute inset-0 bg-black/0"></div>
         <img
           src={loginbg}

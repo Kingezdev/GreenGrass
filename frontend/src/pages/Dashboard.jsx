@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from "react-router-dom";
-import LandlordDashboard from '../components/Dashboard/LandlordDashboard';
+import LandlordDashboard from '../components/Dashboard/Landlord/LandlordDashboard';
 import TenantDashboard from '../components/Dashboard/TenantDashboard';
 import { FaPlusCircle, FaSearch } from "react-icons/fa";
 import { IoIosAddCircleOutline } from "react-icons/io"

@@ -1,4 +1,4 @@
-// components/Dashboard/landlord/StatCard.jsx
+// components/Dashboard/Landlord/StatCard.jsx
 import React from "react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,

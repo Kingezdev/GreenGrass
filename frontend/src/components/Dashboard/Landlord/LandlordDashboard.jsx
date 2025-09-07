@@ -1,12 +1,10 @@
 // pages/LandlordDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import LandlordPropertyCard from './LandlordPropertyCard';
-import DashboardSearch from '../DashboardSearch';
-import propertyData from '../../data/propertyData';
-import { FaHome, FaCheckCircle, FaEye, FaStar } from "react-icons/fa";
-import StatCard from "./StatCards";
-import statsData from '../../data/landlordstatsData';
+import LandlordPropertyCard from '../LandlordPropertyCard';
+import DashboardSearch from '../../DashboardSearch';
+import propertyData from '../../../data/propertyData';
+import Stats from "./Stats";
 
 const LandlordDashboard = ({ user }) => {
   const [properties, setProperties] = useState([]);
@@ -99,20 +97,6 @@ const LandlordDashboard = ({ user }) => {
     }
   ];
 
-  const stats = {
-    totalProperties: properties.length,
-    activeProperties: properties.filter(p => p.status === "active").length,
-    rentedProperties: properties.filter(p => p.status === "rented").length,
-    pendingProperties: properties.filter(p => p.status === "pending").length,
-    totalViews: properties.reduce((sum, p) => sum + (p.views || 0), 0),
-    totalInquiries: properties.reduce((sum, p) => sum + (p.inquiries || 0), 0),
-    averageRating:
-      properties.length > 0
-        ? (properties.reduce((sum, p) => sum + (p.rating || 0), 0) / properties.length).toFixed(1)
-        : 0
-  };
-
-  const data = statsData(stats);
 
   const handleEditProperty = (propertyId, updatedData) => {
     setProperties(prev => prev.map(prop =>
@@ -142,19 +126,7 @@ const LandlordDashboard = ({ user }) => {
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {data.map((item) => (
-          <StatCard
-            key={item.id}
-            title={item.title}
-            value={item.value}
-            icon={item.icon}
-            chartType={item.chartType}
-            colors={item.colors}
-          />
-        ))}
-      </div>
-
+      <Stats />
 
       {/* Search Section */}
       <DashboardSearch 
