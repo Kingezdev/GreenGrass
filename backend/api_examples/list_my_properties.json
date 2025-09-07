@@ -1,0 +1,8 @@
+{
+    "Method": "GET",
+    "URL": "/api/rooms/my-properties/"
+}
+
+{
+  "Authorization": "user authentication token"
+}

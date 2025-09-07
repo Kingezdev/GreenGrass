@@ -1,0 +1,23 @@
+{
+    "Method": "POST",
+    "URL": "/api/rooms/properties/"
+}
+
+{
+    "Authorization": "user authentication token (the backend will provide this with a response when login successfull)",
+    "Content-Type": "application/json"
+}
+
+{
+    "title": "Modern Downtown Loft",
+    "description": "Spacious loft with modern amenities",
+    "property_type": "apartment",
+    "address": "456 Downtown Ave, New York, NY",
+    "price": 2800.00,
+    "bedrooms": 2,
+    "location": "Bukuru",
+    "bathrooms": 2,
+    "area_sqft": 1100,
+    "is_furnished": true,
+    "is_available": true
+  }

@@ -1,0 +1,14 @@
+{
+    "Method": "PUT",
+    "URL": "/api/rooms/properties/{property_id}/"
+}
+
+{
+    "Authorization": "Token YOUR_AUTH_TOKEN",
+    "Content-Type": "application/json"
+}
+
+{
+    "title": "Modern Downtown Loft - Renovated",
+    "price_per_month": 3000.00
+}

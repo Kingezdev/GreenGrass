@@ -1,4 +1,9 @@
 {
+    "Method": "POST",
+    "URL": "/api/accounts/login/"
+}
+
+{
   "email": "landlord1@example.com",
   "password": "securepassword123"
 }
