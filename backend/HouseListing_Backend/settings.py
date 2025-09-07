@@ -74,6 +74,8 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@greengrass.com')
 
 # Email Verification Settings
 EMAIL_VERIFICATION_ENABLED = os.getenv('EMAIL_VERIFICATION_ENABLED', 'True') == 'True'
+# Token expiry in seconds (24 hours)
+EMAIL_VERIFICATION_TOKEN_EXPIRY = int(os.getenv('EMAIL_VERIFICATION_TOKEN_EXPIRY', '86400'))
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 # Backend URL for email verification links
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')
