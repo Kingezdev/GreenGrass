@@ -22,7 +22,7 @@ function App() {
         <div className="flex-1">
           <AppRoutes />
         </div>
-        <Footer />
+        {/*<Footer />*/}
       </div>
     </AuthProvider>
   );

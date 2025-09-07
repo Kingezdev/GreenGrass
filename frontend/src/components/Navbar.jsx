@@ -8,7 +8,7 @@ const Navbar = () => {
   const { user, logout } = useAuth(); // Get user and logout from context
 
   return (
-    <nav className="bg-white shadow-md border-b">
+    <nav className="bg-white shadow-md border-b z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Left side - Logo and Navigation */}
@@ -69,14 +69,9 @@ const Navbar = () => {
                   to="/login" 
                   className="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium transition-colors"
                 >
-                  Sign in
+                  Log in
                 </Link>
-                <Link 
-                  to="/signup" 
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Sign up
-                </Link>
+                
               </div>
             )}
           </div>
