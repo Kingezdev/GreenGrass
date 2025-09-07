@@ -1,0 +1,16 @@
+{
+  "email": "landlord1@example.com",
+  "password": "securepassword123",
+  "password2": "securepassword123",
+  "first_name": "John",
+  "last_name": "Doe",
+  "user_type": "landlord",
+  "landlord": {
+    "phone_number": "+1234567890",
+    "property_name": "Doe Properties",
+    "years_experience": 5,
+    "website": "https://doeproperties.com",
+    "bio": "Professional property manager with 5+ years of experience",
+    "location": "New York, NY"
+  }
+}
