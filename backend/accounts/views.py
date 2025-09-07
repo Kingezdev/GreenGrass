@@ -22,16 +22,27 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        # The serializer handles user and profile creation
-        user = serializer.save()
-        
-        # Send verification email if enabled
-        if settings.EMAIL_VERIFICATION_ENABLED:
-            # Pass request to ensure proper URL generation
-            send_verification_email(user, request)
+        logger.info(f"Starting registration for email: {request.data.get('email')}")
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # The serializer handles user and profile creation
+            logger.info("Creating user and profile...")
+            user = serializer.save()
+            
+            # Send verification email if enabled
+            if settings.EMAIL_VERIFICATION_ENABLED:
+                logger.info(f"Sending verification email to {user.email}")
+                # Pass request to ensure proper URL generation
+                send_verification_email(user, request)
+                logger.info("Verification email sent successfully")
+            else:
+                logger.info("Email verification is disabled")
+                
+        except Exception as e:
+            logger.error(f"Error during registration: {str(e)}", exc_info=True)
+            raise
         
         # Get the user's profile
         profile = user.profile
