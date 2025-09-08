@@ -12,7 +12,8 @@ from django.urls import reverse
 from django.utils import timezone
 from .serializers import RegisterSerializer, UserProfileSerializer, ProfileDetailSerializer, ProfileUpdateSerializer
 from .models import UserProfile, EmailVerificationToken, User
-from .email_utils import send_verification_email
+from .email_utils import send_verification_email, send_local_verification_email
+from django.conf import settings
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -34,8 +35,11 @@ class RegisterView(generics.CreateAPIView):
             # Send verification email if enabled
             if settings.EMAIL_VERIFICATION_ENABLED:
                 logger.info(f"Sending verification email to {user.email}")
-                # Pass request to ensure proper URL generation
-                send_verification_email(user, request)
+                # Use local verification in development, production otherwise
+                if settings.DEBUG:
+                    send_local_verification_email(user, request)
+                else:
+                    send_verification_email(user, request)
                 logger.info("Verification email sent successfully")
             else:
                 logger.info("Email verification is disabled")
@@ -304,8 +308,11 @@ class ResendVerificationEmailView(APIView):
             # Invalidate any existing tokens
             EmailVerificationToken.objects.filter(user=user, is_used=False).update(is_used=True)
             
-            # Send verification email (no need to pass request as we're using production URL)
-            send_verification_email(user)
+            # Use local verification in development, production otherwise
+            if settings.DEBUG:
+                send_local_verification_email(user)
+            else:
+                send_verification_email(user)
             
             logger.info(f"Resent verification email to {email}")
             
