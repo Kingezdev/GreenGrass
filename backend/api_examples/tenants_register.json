@@ -1,0 +1,19 @@
+POST /api/accounts/register/
+
+{
+    "Content-Type": "application/json"
+  }
+
+  {
+    "email": "tenant1@example.com",
+    "password": "Tenant@123",
+    "password2": "Tenant@123",
+    "first_name": "John",
+    "last_name": "Doe",
+    "phone_number": "+1234567890",
+    "user_type": "tenant",
+    "tenant": {
+      "date_of_birth": "1990-01-01",
+      "bio": "Looking for a nice place to live"
+    }
+  }

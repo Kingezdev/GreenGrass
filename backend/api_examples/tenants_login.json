@@ -1,0 +1,12 @@
+POST /api/accounts/login/
+
+{
+    "Content-Type": "application/json"
+  }
+
+  {
+    "email": "tenant1@example.com",
+    "password": "Tenant@123"
+  }
+
+  Save the token from the response for the next requests.

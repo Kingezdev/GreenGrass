@@ -7,3 +7,5 @@
   "email": "landlord1@example.com",
   "password": "securepassword123"
 }
+
+Save the token from the response for the next requests.
