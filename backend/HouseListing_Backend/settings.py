@@ -39,20 +39,31 @@ CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
 CSRF_COOKIE_SAMESITE = 'None' if CSRF_COOKIE_SECURE else 'Lax'
 SESSION_COOKIE_SAMESITE = 'None' if SESSION_COOKIE_SECURE else 'Lax'
 
-# Frontend URL
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://loom-in.vercel.app')
+# Frontend URLs
+PRODUCTION_FRONTEND_URL = 'https://loom-in.vercel.app'
+DEVELOPMENT_FRONTEND_URL = 'http://localhost:5137'
+
+# Set FRONTEND_URL based on environment
+FRONTEND_URL = os.getenv('FRONTEND_URL', 
+    DEVELOPMENT_FRONTEND_URL if DEBUG else PRODUCTION_FRONTEND_URL
+)
 
 # Backend URL
 BACKEND_URL = 'https://greengrass-backend.onrender.com'
 
 # CORS settings
+# CORS settings
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://localhost:5137",
+    "ws://localhost:5137",  # For WebSocket connections in development
+    "http://127.0.0.1:5137",
     "https://greengrass.onrender.com",
     FRONTEND_URL
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+# WebSocket URL
+WEBSOCKET_URL = os.environ.get('WEBSOCKET_URL', 'ws://localhost:8000/ws/')
 
 # Email Configuration - Using console backend for development
 # For production, use:
@@ -97,6 +108,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'corsheaders',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'channels',
     'accounts',
     'core',
     'messaging',
@@ -139,7 +153,28 @@ TEMPLATES = [
     },
 ]
 
+# WSGI Configuration
 WSGI_APPLICATION = 'HouseListing_Backend.wsgi.application'
+
+# ASGI Configuration
+ASGI_APPLICATION = 'HouseListing_Backend.asgi.application'
+
+# Channel layer settings - using InMemoryChannelLayer for development
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
+
+# Uncomment and use this for production with Redis
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379/0')],
+#         },
+#     },
+# }
 
 
 # Database

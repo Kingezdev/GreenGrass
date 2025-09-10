@@ -7,7 +7,11 @@ from rest_framework_simplejwt.views import (
 )
 from django.conf import settings
 from django.conf.urls.static import static
+from django.urls import re_path
 from .views import LandingView
+
+# Import WebSocket routing
+from core.routing import websocket_urlpatterns as core_ws_urls
 
 urlpatterns = [
     path('', LandingView.as_view(), name='landing'),
@@ -28,3 +32,8 @@ urlpatterns = [
 # Serve media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Include WebSocket URLs
+urlpatterns += [
+    re_path(r'^ws/', include((core_ws_urls, 'core'), namespace='ws')),
+]
