@@ -1,0 +1,8 @@
+ {
+    "email": "tenant2@example.com",
+    "password": "Tenant@123"
+  }
+  {
+  "email": "landlord12@example.com",
+  "password": "securepassword123"
+}

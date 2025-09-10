@@ -1,97 +1,94 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Link } from "react-router-dom";
-import LandlordDashboard from '../components/Dashboard/Landlord/LandlordDashboard';
-import TenantDashboard from '../components/Dashboard/TenantDashboard';
-import { FaPlusCircle, FaSearch } from "react-icons/fa";
-import { IoIosAddCircleOutline } from "react-icons/io"
+// src/pages/Dashboard.jsx
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate, Link } from "react-router-dom";
+import { LucideSearch } from "lucide-react";
+import { getProfileByUsername } from "../api/accounts";
+import { useHandle404Redirect } from "../utils/handleErrors";
 
 const Dashboard = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, logout, accessToken } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Simulate fetching user data
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    setUser(userData);
-    setLoading(false);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-      </div>
-    );
-  }
+  const [searchQuery, setSearchQuery] = useState("");
+  const handle404 = useHandle404Redirect();
 
   if (!user) {
-    navigate('/login');
+    navigate("/login");
     return null;
   }
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8 ">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-medium text-[#333]">
-                Hi, {user.name}!
-              </h1>
-              <p className="text-gray-600">
-                {user.role === 'landlord' 
-                  ? 'Manage your properties and track performance' 
-                  : 'Find your perfect home and track your search'
-                }
-              </p>
-              
-            </div>
-            <div className='flex items-center  gap-3'>
-              <div>
-                {user.role === "landlord" ? (
-                  <Link
-                    to="/add-property"
-                    className="bg-black rounded-full text-white px-5 py-2.5 hover:bg-[#1a1a1a] text-xs flex items-center gap-2"
-                  >
-                    <IoIosAddCircleOutline className="text-white text-xl" />
-                    Add Property
-                  </Link>
-                  ) : (
-                  <Link
-                    to="/properties"
-                    className="bg-black rounded-full text-white px-5 py-2.5 hover:bg-[#1a1a1a] text-xs flex items-center gap-2"
-                  >
-                    <FaSearch className="text-white text-xl" />
-                    Browse Properties
-                  </Link>
-                )}
-              </div>
-              <div className="flex items-center space-x-4">
-                {!user.verified && (
-                  <button
-                    onClick={() => navigate('/verification')}
-                    className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-200"
-                  >
-                    Complete Verification
-                  </button>
-                )}
-                <span className={`px-5 py-2.5 rounded-full text-xs font-medium ${
-                  user.verified ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {user.verified ? 'Verified' : 'Unverified'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery) return;
 
-        {/* Role-Based Content */}
-        {user.role === 'landlord' && <LandlordDashboard user={user} />}
-        {user.role === 'tenant' && <TenantDashboard user={user} />}
+    try {
+      // Check if user exists
+      await getProfileByUsername(searchQuery, accessToken);
+      // Navigate to profile if exists
+      navigate(`/profile/${searchQuery}`);
+    } catch (err) {
+      handle404(err);
+    } finally {
+      setSearchQuery("");
+    }
+  };
+
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">
+        Welcome, {user?.first_name || user?.email}
+      </h1>
+
+      <div className="flex gap-4 mb-6 flex-wrap">
+        <button
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+          onClick={logout}
+        >
+          Logout
+        </button>
+
+        <Link
+          to="/profile"
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+        >
+          Go to Profile
+        </Link>
+
+        <Link
+          to="/search"
+          className="flex items-center px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition"
+        >
+          <LucideSearch className="w-5 h-5 mr-2" />
+          Search Users
+        </Link>
+
+        <Link to="/landlords" className="flex items-center px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition">
+          View Landlords
+        </Link>
+        <Link 
+          to="/properties" 
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+        >
+          properties
+        </Link>
       </div>
+
+      <form onSubmit={handleSearch} className="flex max-w-md mb-4">
+        <input
+          type="text"
+          placeholder="Search by username..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="flex-1 p-2 border border-gray-300 rounded-l-md focus:outline-none"
+        />
+        <button
+          type="submit"
+          className="px-4 py-2 bg-gray-700 text-white rounded-r-md hover:bg-gray-800 flex items-center"
+        >
+          <LucideSearch className="w-5 h-5" />
+        </button>
+      </form>
     </div>
   );
 };

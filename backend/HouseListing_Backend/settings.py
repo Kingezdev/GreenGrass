@@ -42,7 +42,7 @@ SESSION_COOKIE_SAMESITE = 'None' if SESSION_COOKIE_SECURE else 'Lax'
 
 # Frontend URLs
 PRODUCTION_FRONTEND_URL = 'https://loom-in.vercel.app'
-DEVELOPMENT_FRONTEND_URL = 'http://localhost:5137'
+DEVELOPMENT_FRONTEND_URL = 'http://localhost:5173'
 
 # Set FRONTEND_URL based on environment
 FRONTEND_URL = os.getenv('FRONTEND_URL', 
@@ -54,9 +54,9 @@ BACKEND_URL = 'https://greengrass-backend.onrender.com'
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5137",
-    "ws://localhost:5137",  # For WebSocket connections in development
-    "http://127.0.0.1:5137",
+    "http://localhost:5173",
+    "ws://localhost:5173",  # For WebSocket connections in development
+    "http://127.0.0.1:5173",
     "https://greengrass.onrender.com",
     PRODUCTION_FRONTEND_URL,
     DEVELOPMENT_FRONTEND_URL,

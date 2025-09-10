@@ -1,155 +1,103 @@
-// routes.jsx
+// src/AppRoutes.jsx
+import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
-import ViewPropertyDetails from "./pages/ViewPropertyDetails";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import VerificationStatus from "./pages/VerificationStatus";
-import Favorites from "./pages/Favorites";
-import Messages from "./pages/Messages";
-import LandlordProfile from "./pages/LandlordProfile";
-import TenantProfile from "./pages/TenantProfile";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import ListProperty from "./pages/ListProperty";
-import ProfileSettings from "./pages/ProfileSettings";
-import AddProperty from "./pages/AddProperty";
-import EditProperty from "./pages/EditProperty";
-import PaymentPage from "./pages/PaymentPage";
-import Transactions from "./pages/Transactions";
-import TransactionDetail from "./pages/TransactionDetail";
+import ProfilePage from "./pages/ProfilePage";
+import UserProfile from "./pages/UserProfile";
+import Search from "./pages/Search";
+import PageNotFound from "./pages/PageNotFound";
+import Landlords from "./pages/Landlords";
+import PropertiesPage from "./pages/PropertiesPage"
+import PropertyDetails from "./pages/PropertyDetails";
+import CreateProperty from "./pages/CreateProperty";
+import Rooms from "./pages/Rooms";
+import AddRoom from "./pages/AddRoom";
+import { useAuth } from "./context/AuthContext";
 
-
-// Authentication check functions
-const isAuthenticated = () => {
-  return localStorage.getItem('user') !== null;
+const PrivateRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <div>Loading...</div>;
+  return user ? children : <Navigate to="/login" />;
 };
 
-const getUserRole = () => {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  return user.role || null;
-};
 
-// Protected Route component
-const ProtectedRoute = ({ children, requiredRole = null }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  if (requiredRole && getUserRole() !== requiredRole) {
-    return <Navigate to="/" replace />;
-  }
-  
-  return children;
-};
-
-// Home route that redirects to dashboard if already logged in
-const HomeRoute = () => {
-  return isAuthenticated() ? <Navigate to="/dashboard" replace /> : <Home />;
-};
-
-const AppRoutes = () => (
-  <>
-    <ScrollToTop />
+const AppRoutes = () => {
+  return (
     <Routes>
-      <Route path="/" element={<HomeRoute />} />
-      <Route path="/property/:id" element={<ViewPropertyDetails />} />
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route 
-        path="/verification" 
-        element={
-          <ProtectedRoute>
-            <VerificationStatus />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/favorites" 
-        element={
-          <ProtectedRoute>
-            <Favorites />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/messages" 
-        element={
-          <ProtectedRoute>
-            <Messages />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/dashboard" 
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/properties" 
-        element={
-          <ProtectedRoute>
-            <ListProperty />
-          </ProtectedRoute>
-        } 
-      />
-      <Route path="/landlord/:id" element={<LandlordProfile />} />
-      <Route path="/tenant/:id" element={<TenantProfile />} />
-
-      <Route 
-        path="/profile/settings" 
-        element={
-          <ProtectedRoute>
-            <ProfileSettings />
-          </ProtectedRoute>
-        } 
-      />
-      
-      <Route 
-        path="/add-property" 
-        element={
-          <ProtectedRoute requiredRole="landlord">
-            <AddProperty />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/edit-property/:id" 
-        element={
-          <ProtectedRoute requiredRole="landlord">
-            <EditProperty />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/payment/:id" 
-        element={
-          <ProtectedRoute requiredRole="tenant">
-            <PaymentPage />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/transactions" 
-        element={
-          <ProtectedRoute>
-            <Transactions />
-          </ProtectedRoute>
-        } 
-      />
+      <Route path="/register" element={<Register />} />
       <Route
-        path="/transactions/:id"
+        path="/dashboard"
         element={
-          <ProtectedRoute>
-            <TransactionDetail />
-          </ProtectedRoute>
+          <PrivateRoute>
+            <Dashboard />
+          </PrivateRoute>
         }
       />
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute>
+            <ProfilePage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/profile/:username"
+        element={
+          <PrivateRoute>
+            <UserProfile />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/search"
+        element={
+          <PrivateRoute>
+            <Search />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/landlords"
+        element={
+          <PrivateRoute>
+            <Landlords />
+          </PrivateRoute>
+        }
+      />
+      <Route path="/properties" element={<PropertiesPage />} />
+      <Route
+        path="/properties/:property_id"
+        element={<PropertyDetails />}
+      />
+      <Route
+        path="/properties/create"
+        element={
+          <PrivateRoute>
+            <CreateProperty />
+          </PrivateRoute>
+        }
+      />
+
+      <Route path="/rooms" element={<Rooms />} />
+      <Route
+        path="/rooms/:property_id"
+        element={
+          <PrivateRoute>
+            <AddRoom />
+          </PrivateRoute>
+        }
+      />
+        
+      <Route path="/page-not-found" element={<PageNotFound />} />
+      <Route path="*" element={<PageNotFound />} />
     </Routes>
-    </>
-);
+  );
+};
 
 export default AppRoutes;

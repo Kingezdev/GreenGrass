@@ -112,7 +112,7 @@ def _prepare_and_send_verification_email(user, verification_url, **kwargs):
     site_name = getattr(settings, 'SITE_NAME', 'Our Site')
     support_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com')
     expiry_hours = settings.EMAIL_VERIFICATION_TOKEN_EXPIRY // 3600  # Convert to hours
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5137')
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
     
     context = {
         'user': user,
