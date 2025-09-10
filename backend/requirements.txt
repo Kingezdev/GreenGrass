@@ -1,33 +1,65 @@
-# Core
-Django==5.2.5
 asgiref==3.9.1
-python-dotenv==1.1.1
-dj-database-url==2.1.0
-
-# Database
-psycopg2-binary==2.9.10
-
-# REST Framework
-djangorestframework==3.16.1
-djangorestframework-simplejwt==5.5.1
+attrs==25.3.0
+autobahn==24.4.2
+Automat==25.4.16
+black==24.4.2
+certifi==2025.8.3
+cffi==2.0.0
+channels==4.3.1
+channels_redis==4.3.0
+charset-normalizer==3.4.3
+click==8.2.1
+colorama==0.4.6
+constantly==23.10.4
+cryptography==45.0.7
+daphne==4.2.1
+dj-database-url==3.0.1
+Django==5.2.5
+django-anymail==13.0
 django-cors-headers==4.7.0
 django-filter==25.1
-
-# Email
-django-anymail==13.0.0
-
-# File Processing
-Pillow==11.3.0
-
-# Security
-PyJWT==2.10.1
-
-# Production
+djangorestframework==3.16.1
+djangorestframework_simplejwt==5.5.1
+flake8==7.1.1
 gunicorn==23.0.0
-whitenoise==6.9.0
-python-decouple==3.8
-
-# Utils
-sqlparse==0.5.3
-tzdata==2025.2
+hyperlink==21.0.0
+idna==3.10
+incremental==24.7.2
+iniconfig==2.1.0
+mccabe==0.7.0
+msgpack==1.1.1
+mypy_extensions==1.1.0
+ndg-httpsclient==0.5.1
 packaging==25.0
+pathspec==0.12.1
+pillow==11.3.0
+platformdirs==4.4.0
+pluggy==1.6.0
+psycopg2-binary==2.9.10
+pusher==3.3.3
+pyasn1==0.6.1
+pyasn1_modules==0.4.2
+pycodestyle==2.12.1
+pycparser==2.23
+pyflakes==3.2.0
+PyJWT==2.10.1
+PyNaCl==1.5.0
+pyOpenSSL==25.1.0
+pytest==8.2.0
+pytest-asyncio==1.1.0
+pytest-django==4.8.0
+python-dotenv==1.1.1
+redis==6.4.0
+requests==2.32.5
+service-identity==24.2.0
+setuptools==80.9.0
+six==1.17.0
+sqlparse==0.5.3
+Twisted==25.5.0
+txaio==25.6.1
+typing_extensions==4.15.0
+tzdata==2025.2
+urllib3==2.5.0
+websockets==15.0.1
+whitenoise==6.9.0
+zope.interface==7.2

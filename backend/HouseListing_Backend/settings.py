@@ -62,7 +62,14 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# WebSocket URL
+# Pusher Configuration
+PUSHER_APP_ID = os.environ.get('PUSHER_APP_ID', '')
+PUSHER_KEY = os.environ.get('PUSHER_KEY', '')
+PUSHER_SECRET = os.environ.get('PUSHER_SECRET', '')
+PUSHER_CLUSTER = os.environ.get('PUSHER_CLUSTER', 'mt1')
+PUSHER_SSL = os.environ.get('PUSHER_SSL', 'true').lower() == 'true'
+
+# WebSocket URL (Legacy, to be removed after Pusher migration)
 WEBSOCKET_URL = os.environ.get('WEBSOCKET_URL', 'ws://localhost:8000/ws/')
 
 # Email Configuration - Using console backend for development

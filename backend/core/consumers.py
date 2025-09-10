@@ -7,96 +7,82 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 
+from .pusher_service import pusher_service
+
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
 class NotificationConsumer(AsyncWebsocketConsumer):
     """
-    WebSocket consumer for handling real-time notifications.
-    Handles connection, disconnection, and message routing for WebSocket clients.
+    WebSocket consumer for handling real-time notifications using Pusher.
+    This consumer now serves as a bridge between the client and Pusher.
     """
     
     async def connect(self):
-        """Handle WebSocket connection."""
+        """Handle WebSocket connection for Pusher authentication."""
         try:
             self.user_id = self.scope['url_route']['kwargs']['user_id']
-            self.room_group_name = f'user_{self.user_id}'
             self.user = await self.get_user(self.user_id)
             
-            if not self.user:
+            if not self_user:
                 await self.close(code=4001)  # Custom close code for invalid user
                 return
                 
-            # Store connection time for tracking
-            self.connect_time = timezone.now()
-            
-            # Join room group
-            await self.channel_layer.group_add(
-                self.room_group_name,
-                self.channel_name
-            )
-            
+            # Accept the connection
             await self.accept()
-            logger.info(f"WebSocket connected: {self.channel_name} for user {self.user_id}")
-            
-            # Send a welcome message
-            await self.send_notification(
-                "Connected to notification service",
-                'connection',
-                {'status': 'connected', 'timestamp': str(timezone.now())}
-            )
+            logger.info(f"Pusher auth connected for user {self.user_id}")
             
         except Exception as e:
-            logger.error(f"Error in WebSocket connection: {str(e)}")
-            await self.close(code=4000)  # Custom close code for connection error
-
-    async def disconnect(self, close_code):
-        """Handle WebSocket disconnection."""
-        if hasattr(self, 'room_group_name') and hasattr(self, 'channel_name'):
-            await self.channel_layer.group_discard(
-                self.room_group_name,
-                self.channel_name
-            )
-            logger.info(f"WebSocket disconnected: {self.channel_name} (code: {close_code})")
-
+            logger.error(f"Error in Pusher auth connection: {str(e)}")
+            await self.close(code=4000)
+            
     async def receive(self, text_data=None, bytes_data=None):
-        """Handle incoming WebSocket messages."""
+        """Handle incoming WebSocket messages for Pusher authentication."""
         if not text_data:
             logger.warning("Received empty message")
             return
             
         try:
             data = json.loads(text_data)
-            message_type = data.get('type', 'notification')
+            socket_id = data.get('socket_id')
+            channel_name = data.get('channel_name')
             
-            # Handle different types of messages
-            if message_type == 'ping':
-                await self.handle_ping()
-            elif message_type == 'ack':
-                await self.handle_acknowledgment(data)
-            else:
-                await self.handle_notification(data)
+            if not socket_id or not channel_name:
+                await self.send_error("Missing required parameters")
+                return
                 
+            # Authenticate the channel
+            auth_data = pusher_service.authenticate_channel(
+                channel_name=channel_name,
+                socket_id=socket_id,
+                custom_data={
+                    'user_id': str(self.user_id),
+                    'user_info': {
+                        'id': str(self.user.id),
+                        'email': self.user.email
+                    }
+                } if channel_name.startswith('presence-') else None
+            )
+            
+            await self.send(text_data=json.dumps(auth_data))
+            
         except json.JSONDecodeError:
             logger.error("Invalid JSON received")
             await self.send_error("Invalid JSON format")
         except Exception as e:
-            logger.exception("Error processing message")
-            await self.send_error("Internal server error")
+            logger.exception("Error processing Pusher auth")
+            await self.send_error("Authentication failed")
     
-    async def handle_ping(self):
-        """Handle ping messages for connection health checks."""
-        await self.send_json({
-            'type': 'pong',
-            'timestamp': str(timezone.now())
-        })
+    async def disconnect(self, close_code):
+        """Handle WebSocket disconnection."""
+        logger.info(f"Pusher auth disconnected for user {getattr(self, 'user_id', 'unknown')} (code: {close_code})")
     
-    async def handle_acknowledgment(self, data):
-        """Handle message acknowledgments from the client."""
-        message_id = data.get('message_id')
-        if message_id:
-            logger.info(f"Received ack for message {message_id}")
-            # Here you could update the message status in your database
+    async def send_error(self, message):
+        """Send an error message to the client."""
+        await self.send(text_data=json.dumps({
+            'error': message,
+            'status': 'error'
+        }))
     
     async def handle_notification(self, data):
         """Handle incoming notification messages."""
@@ -139,12 +125,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_user(self, user_id):
-        """Get user by ID."""
+        """Get a user by ID."""
         try:
-            return User.objects.get(id=user_id)
-        except ObjectDoesNotExist:
-            logger.warning(f"User with ID {user_id} not found")
-            return None
-        except Exception as e:
-            logger.error(f"Error fetching user {user_id}: {str(e)}")
+            return User.objects.get(id=user_id, is_active=True)
+        except User.DoesNotExist:
+            logger.warning(f"User not found or inactive: {user_id}")
             return None
