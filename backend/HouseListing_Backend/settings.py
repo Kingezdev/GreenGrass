@@ -1,4 +1,5 @@
 import os
+import pusher
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -52,13 +53,19 @@ FRONTEND_URL = os.getenv('FRONTEND_URL',
 BACKEND_URL = 'https://greengrass-backend.onrender.com'
 
 # CORS settings
-# CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5137",
     "ws://localhost:5137",  # For WebSocket connections in development
     "http://127.0.0.1:5137",
     "https://greengrass.onrender.com",
+    PRODUCTION_FRONTEND_URL,
+    DEVELOPMENT_FRONTEND_URL,
     FRONTEND_URL
+]
+
+# Allow all subdomains of the production frontend
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://[\w-]+\.vercel\.app$",
 ]
 CORS_ALLOW_CREDENTIALS = True
 

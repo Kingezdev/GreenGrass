@@ -3,10 +3,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Max
+from django.utils import timezone
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
+from core.pusher_service import pusher_service
 from .models import Conversation, Message
 from .serializers import (
     ConversationSerializer, ConversationCreateSerializer, ConversationDetailSerializer,
@@ -72,11 +74,36 @@ class ConversationDetailView(generics.RetrieveAPIView):
     
     def retrieve(self, request, *args, **kwargs):
         conversation = self.get_object()
-        # Mark messages as read for the current user
-        Message.objects.filter(
+        
+        # Get unread messages before marking them as read
+        unread_messages = Message.objects.filter(
             conversation=conversation,
             is_read=False
-        ).exclude(sender=request.user).update(is_read=True)
+        ).exclude(sender=request.user)
+        
+        # Get the list of senders whose messages are being marked as read
+        senders = set(unread_messages.values_list('sender', flat=True))
+        
+        # Mark messages as read
+        updated_count = unread_messages.update(is_read=True)
+        
+        # Notify senders that their messages were read
+        if updated_count > 0 and senders:
+            # Get the other participant in the conversation
+            other_participant = conversation.tenant if request.user == conversation.landlord else conversation.landlord
+            
+            # Trigger Pusher event for each sender
+            for sender_id in senders:
+                channel_name = f'private-user-{sender_id}'
+                pusher_service.trigger(
+                    channels=[channel_name],
+                    event='messages_read',
+                    data={
+                        'conversation_id': conversation.id,
+                        'reader_id': request.user.id,
+                        'read_at': str(timezone.now())
+                    }
+                )
         
         return super().retrieve(request, *args, **kwargs)
 
@@ -104,6 +131,25 @@ class MessageCreateView(generics.CreateAPIView):
         
         # Update conversation timestamp
         conversation.save()
+        
+        # Prepare recipient ID for the channel
+        recipient = conversation.tenant if self.request.user == conversation.landlord else conversation.landlord
+        channel_name = f'private-user-{recipient.id}'
+        
+        # Trigger Pusher event
+        pusher_service.trigger(
+            channels=[channel_name],
+            event='new_message',
+            data={
+                'conversation_id': conversation.id,
+                'message': MessageSerializer(message, context={'request': self.request}).data,
+                'unread_count': Message.objects.filter(
+                    conversation=conversation,
+                    is_read=False,
+                    sender=recipient
+                ).count()
+            }
+        )
         
         # Return the created message with full details
         response_serializer = MessageSerializer(message, context={'request': self.request})
