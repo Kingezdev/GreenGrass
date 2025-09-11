@@ -343,4 +343,19 @@ class LandlordListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     
     def get_queryset(self):
-        return UserProfile.objects.filter(user_type='landlord').select_related('user')
+        return UserProfile.objects.filter(
+            user_type='landlord',
+            user__is_active=True
+        ).select_related('user')
+
+
+class TenantListView(generics.ListAPIView):
+    """List all tenants with their profiles"""
+    serializer_class = ProfileDetailSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return UserProfile.objects.filter(
+            user_type='tenant',
+            user__is_active=True
+        ).select_related('user')

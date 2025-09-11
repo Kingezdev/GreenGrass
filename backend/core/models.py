@@ -6,6 +6,8 @@ User = get_user_model()
 
 # Create your models here.
 
+# Temporarily commented out as this is a duplicate of the Property model in rooms/models.py
+'''
 class Property(models.Model):
     PROPERTY_TYPES = [
         ('apartment', 'Apartment'),
@@ -37,3 +39,4 @@ class Property(models.Model):
     class Meta:
         verbose_name_plural = 'Properties'
         ordering = ['-created_at']
+'''

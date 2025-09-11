@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated, BasePermission
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 
-from .models import Property
+from rooms.models import Property
 from .serializers import PropertySerializer
 
 

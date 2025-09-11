@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.core.validators import MinValueValidator
-from .models import Property
+from rooms.models import Property
 
 class PropertySerializer(serializers.ModelSerializer):
     """

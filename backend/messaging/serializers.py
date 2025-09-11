@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import Conversation, Message
 from accounts.models import UserProfile
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class MessageSerializer(serializers.ModelSerializer):
     sender_name = serializers.CharField(source='sender.username', read_only=True)
