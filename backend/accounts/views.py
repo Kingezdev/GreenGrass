@@ -10,10 +10,26 @@ from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
-from .serializers import RegisterSerializer, UserProfileSerializer, ProfileDetailSerializer, ProfileUpdateSerializer
+from django.db import models
+from django.db.models import Q
+from rest_framework import generics, permissions, status, throttling
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.contrib.auth import authenticate, get_user_model
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.conf import settings
+from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
+from django.utils import timezone
+from django.contrib.postgres.search import TrigramSimilarity
+from rest_framework.throttling import ScopedRateThrottle
+from typing import Optional, List, Dict, Any
+
+from .serializers import RegisterSerializer, UserProfileSerializer, ProfileDetailSerializer, ProfileUpdateSerializer, UserSearchSerializer
 from .models import UserProfile, EmailVerificationToken, User
 from .email_utils import send_verification_email, send_local_verification_email
-from django.conf import settings
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -349,11 +365,123 @@ class LandlordListView(generics.ListAPIView):
         ).select_related('user')
 
 
+class UserSearchView(generics.ListAPIView):
+    """
+    Enhanced user search with advanced filtering and sorting options.
+    
+    Search users by first name, last name, or email with the following features:
+    - Partial and fuzzy matching using trigram similarity
+    - Filter by user type (landlord/tenant)
+    - Sort by relevance, name, or email
+    - Pagination support
+    
+    Query Parameters:
+        q: Search terms (required)
+        user_type: Filter by 'landlord' or 'tenant' (optional)
+        exact_match: 'true' for exact matches only (default: false)
+        sort: Field to sort by (relevance, name, email, -name, -email)
+        min_score: Minimum similarity score (0.0-1.0, default: 0.1)
+    """
+    serializer_class = UserSearchSerializer
+    permission_classes = [permissions.AllowAny]  # Allow unauthenticated access
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'search'
+    
+    def get_queryset(self) -> models.QuerySet:
+        search_query = self.request.query_params.get('q', '').strip()
+        user_type = self.request.query_params.get('user_type')
+        exact_match = self.request.query_params.get('exact_match', 'false').lower() == 'true'
+        min_score = float(self.request.query_params.get('min_score', 0.1))
+        
+        queryset = User.objects.all()
+        
+        # Filter by user type if specified
+        if user_type and user_type.lower() in ['landlord', 'tenant']:
+            queryset = queryset.filter(profile__user_type=user_type.lower())
+        
+        # If no search query, return empty queryset
+        if not search_query:
+            return queryset.none()
+            
+        search_terms = [term.strip() for term in search_query.split() if term.strip()]
+        if not search_terms:
+            return queryset.none()
+            
+        # Build the query
+        if exact_match:
+            # Exact match search
+            query = Q()
+            for term in search_terms:
+                query &= (
+                    Q(first_name__iexact=term) |
+                    Q(last_name__iexact=term) |
+                    Q(email__iexact=term)
+                )
+            queryset = queryset.filter(query)
+        else:
+            # Fuzzy search with trigram similarity
+            queryset = queryset.annotate(
+                first_name_similarity=TrigramSimilarity('first_name', search_query),
+                last_name_similarity=TrigramSimilarity('last_name', search_query),
+                email_similarity=TrigramSimilarity('email', search_query)
+            ).annotate(
+                similarity=models.functions.Greatest(
+                    'first_name_similarity',
+                    'last_name_similarity',
+                    'email_similarity'
+                )
+            ).filter(similarity__gte=min_score)
+            
+            # Apply ordering
+            sort = self.request.query_params.get('sort', '').lower()
+            if sort in ['name', 'first_name']:
+                queryset = queryset.order_by('first_name', 'last_name')
+            elif sort == '-name' or sort == '-first_name':
+                queryset = queryset.order_by('-first_name', '-last_name')
+            elif sort == 'email':
+                queryset = queryset.order_by('email')
+            elif sort == '-email':
+                queryset = queryset.order_by('-email')
+            elif not exact_match:
+                # Default: order by similarity score
+                queryset = queryset.order_by('-similarity')
+        
+        return queryset.select_related('profile').distinct()
+        
+    def list(self, request, *args, **kwargs) -> Response:
+        """
+        Handle GET request and return paginated results.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # Return empty list if no search query provided
+        if not request.query_params.get('q'):
+            return Response({
+                'count': 0,
+                'next': None,
+                'previous': None,
+                'results': []
+            })
+            
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+            
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'count': len(serializer.data),
+            'next': None,
+            'previous': None,
+            'results': serializer.data
+        })
+
+
 class TenantListView(generics.ListAPIView):
     """List all tenants with their profiles"""
     serializer_class = ProfileDetailSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         return UserProfile.objects.filter(
             user_type='tenant',

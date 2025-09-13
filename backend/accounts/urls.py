@@ -27,5 +27,6 @@ urlpatterns = [
     path('landlords/', views.LandlordListView.as_view(), name='landlord-list'),
     path('tenants/', views.TenantListView.as_view(), name='tenant-list'),
     
-    
+    # Search endpoint
+    path('search/', views.UserSearchView.as_view(), name='user-search'),
 ]

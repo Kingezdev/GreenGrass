@@ -122,6 +122,39 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
                  'date_joined', 'user_type', 'property_name', 'years_experience')
 
 
+class UserSearchSerializer(serializers.ModelSerializer):
+    """
+    Serializer for public user search results.
+    
+    Only includes publicly available user information and similarity score.
+    """
+    user_type = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
+    score = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ('id', 'first_name', 'last_name', 'full_name', 'user_type', 'score')
+        read_only_fields = fields
+    
+    def get_user_type(self, obj) -> str:
+        """Get the user type from the profile if available."""
+        # Only return basic user type (landlord/tenant) without sensitive info
+        if hasattr(obj, 'profile'):
+            return obj.profile.user_type if hasattr(obj.profile, 'user_type') else None
+        return None
+    
+    def get_full_name(self, obj) -> str:
+        """Combine first and last name into a full name string."""
+        return f"{obj.first_name} {obj.last_name}".strip()
+        
+    def get_score(self, obj) -> float:
+        """Get the similarity score if available from the search."""
+        if hasattr(obj, 'similarity'):
+            return round(float(obj.similarity), 4)
+        return None
+
+
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name', required=False)
     last_name = serializers.CharField(source='user.last_name', required=False)
