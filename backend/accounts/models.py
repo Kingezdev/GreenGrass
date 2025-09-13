@@ -90,9 +90,20 @@ class UserProfile(models.Model):
     
     # Profile fields
     bio = models.TextField(max_length=500, blank=True)
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    avatar = models.ImageField(
+        upload_to='avatars/%Y/%m/%d/', 
+        blank=True, 
+        null=True,
+        validators=[],  # We'll add validators in the clean method
+        help_text='Upload a profile picture (max 5MB, JPG/PNG/WEBP)'
+    )
     location = models.CharField(max_length=100, blank=True)
     date_of_birth = models.DateField(blank=True, null=True)
+    
+    # Image dimensions for resizing
+    AVATAR_WIDTH = 500
+    AVATAR_HEIGHT = 500
+    MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5MB
     
     # Landlord-specific fields
     property_name = models.CharField(max_length=100, blank=True, verbose_name='Property/Business Name',

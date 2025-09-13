@@ -105,21 +105,34 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class ProfileDetailSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(source='user.email')
+    email = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
-    is_verified = serializers.BooleanField(source='email_verified')
-    date_joined = serializers.DateTimeField(source='user.date_joined')
-    date_of_birth = serializers.DateField()  # profile field
-    user_type = serializers.CharField()
-    property_name = serializers.CharField(required=False)
-    years_experience = serializers.IntegerField(required=False)
-
+    is_verified = serializers.BooleanField(source='email_verified', read_only=True)
+    date_joined = serializers.DateTimeField(source='user.date_joined', read_only=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    user_type = serializers.CharField(read_only=True)
+    property_name = serializers.CharField(required=False, allow_blank=True)
+    years_experience = serializers.IntegerField(required=False, min_value=0, allow_null=True)
+    avatar_url = serializers.SerializerMethodField()
+    
     class Meta:
         model = UserProfile
-        fields = ('email', 'first_name', 'last_name', 'phone_number', 
-                 'avatar', 'bio', 'date_of_birth', 'is_verified', 
-                 'date_joined', 'user_type', 'property_name', 'years_experience')
+        fields = (
+            'email', 'first_name', 'last_name', 'phone_number', 
+            'avatar', 'avatar_url', 'bio', 'date_of_birth', 'is_verified', 
+            'date_joined', 'user_type', 'property_name', 'years_experience',
+            'website', 'location'
+        )
+        read_only_fields = ('is_verified', 'user_type')
+        
+    def get_avatar_url(self, obj):
+        if obj.avatar:
+            request = self.context.get('request')
+            if request is not None:
+                return request.build_absolute_uri(obj.avatar.url)
+            return obj.avatar.url
+        return None
 
 
 class UserSearchSerializer(serializers.ModelSerializer):
@@ -161,7 +174,25 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
     current_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     new_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
-    date_of_birth = serializers.DateField(required=False)  # profile field
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    avatar = serializers.ImageField(required=False, allow_null=True)
+    
+    class Meta:
+        model = UserProfile
+        fields = (
+            'first_name', 'last_name', 'phone_number', 'bio',
+            'date_of_birth', 'avatar', 'website', 'location',
+            'current_password', 'new_password', 'confirm_password',
+            'property_name', 'years_experience'
+        )
+        extra_kwargs = {
+            'avatar': {'required': False, 'allow_null': True},
+            'bio': {'required': False, 'allow_blank': True},
+            'website': {'required': False, 'allow_blank': True},
+            'location': {'required': False, 'allow_blank': True},
+            'property_name': {'required': False, 'allow_blank': True},
+            'years_experience': {'required': False, 'allow_null': True},
+        }  # profile field
 
     class Meta:
         model = UserProfile
@@ -195,18 +226,42 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
+        # Handle user data
         user_data = validated_data.pop('user', {})
         user = instance.user
-
-        # Update user fields
+        
+        # Update user fields if provided
         for attr, value in user_data.items():
             setattr(user, attr, value)
         
-        # Update password if provided
-        if 'new_password' in validated_data and validated_data['new_password']:
-            user.set_password(validated_data['new_password'])
+        # Handle password change if all password fields are provided
+        current_password = validated_data.pop('current_password', None)
+        new_password = validated_data.pop('new_password', None)
+        confirm_password = validated_data.pop('confirm_password', None)
+        
+        if all([current_password, new_password, confirm_password]):
+            if new_password != confirm_password:
+                raise serializers.ValidationError({"new_password": "The two password fields didn't match."})
+            if not user.check_password(current_password):
+                raise serializers.ValidationError({"current_password": "Incorrect current password."})
+            user.set_password(new_password)
+        
+        # Handle avatar separately to trigger model's save method
+        avatar = validated_data.pop('avatar', None)
+        if avatar is not None:
+            # If avatar is an empty string or None, delete the current avatar
+            if avatar == '' or avatar is None:
+                if instance.avatar:
+                    instance.avatar.delete(save=False)
+                    instance.avatar = None
+            else:
+                instance.avatar = avatar
         
         user.save()
-
-        # Update profile fields
-        return super().update(instance, validated_data)
+        
+        # Update remaining profile fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            
+        instance.save()
+        return instance

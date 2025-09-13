@@ -157,24 +157,43 @@ class ProfileDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.AllowAny]
     
     def get_object(self):
-        user_id = self.kwargs.get('user_id')
-        user = get_object_or_404(User, id=user_id)
+        username = self.kwargs.get('username')
+        user = get_object_or_404(User, email=username)  # Using email as username
         return get_object_or_404(UserProfile, user=user)
+        
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
 @method_decorator(csrf_exempt, name='dispatch')
 class MyProfileView(generics.RetrieveUpdateAPIView):
     """
     Get or update current user's profile
     """
+    serializer_class = ProfileUpdateSerializer
     permission_classes = [permissions.IsAuthenticated]
     
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return ProfileDetailSerializer
-        return ProfileUpdateSerializer
-    
     def get_object(self):
-        return get_object_or_404(UserProfile, user=self.request.user)
+        # Get or create profile if it doesn't exist
+        profile, created = UserProfile.objects.get_or_create(user=self.request.user)
+        return profile
+        
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+        
+    def patch(self, request, *args, **kwargs):
+        # Handle avatar deletion if empty string is passed
+        if 'avatar' in request.data and request.data['avatar'] == '':
+            profile = self.get_object()
+            if profile.avatar:
+                profile.avatar.delete()
+                profile.avatar = None
+                profile.save()
+            return Response({'status': 'avatar deleted'})
+        return self.partial_update(request, *args, **kwargs)
 
 logger = logging.getLogger(__name__)
 @method_decorator(csrf_exempt, name='dispatch')
