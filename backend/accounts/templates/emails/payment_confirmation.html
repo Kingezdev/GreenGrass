@@ -1,0 +1,51 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+    <tr>
+        <td style="padding: 40px 0 30px 0; color: #1a1a1a; font-family: 'Inter', Arial, sans-serif; font-size: 16px; line-height: 24px;">
+            <p>Hello {{ user.first_name|default:'there' }},</p>
+            
+            <p>Thank you for your payment. Your transaction has been processed successfully.</p>
+            
+            <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <h3 style="color: #1a1a1a; margin-top: 0;">Payment Details</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; width: 40%;">Transaction Reference:</td>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; font-weight: 600;">{{ reference }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">Amount Paid:</td>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; font-weight: 600;">₦{{ amount|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">Date:</td>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; font-weight: 600;">{{ date|date:"F j, Y H:i" }}</td>
+                    </tr>
+                    {% if property %}
+                    <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">Property:</td>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; font-weight: 600;">{{ property.title }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if room %}
+                    <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">Room:</td>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; font-weight: 600;">{{ room.room_number }} ({{ room.get_room_type_display }})</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+
+            <p>You can view your transaction history by logging into your account.</p>
+
+            <p>If you have any questions about your payment, please don't hesitate to contact our support team at 
+                <a href="mailto:{{ support_email }}" style="color: #4a6cf7; text-decoration: none;">{{ support_email }}</a>.
+            </p>
+
+            <p>Thank you for choosing GreenGrass!</p>
+
+            <p>Best regards,<br>The GreenGrass Team</p>
+        </td>
+    </tr>
+{% endblock %}

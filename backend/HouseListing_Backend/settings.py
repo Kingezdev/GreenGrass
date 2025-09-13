@@ -45,6 +45,12 @@ SESSION_COOKIE_SAMESITE = 'None' if SESSION_COOKIE_SECURE else 'Lax'
 PRODUCTION_FRONTEND_URL = "https://loom-in.vercel.app"
 DEVELOPMENT_FRONTEND_URL = "http://localhost:5173"
 
+# Paystack Settings
+PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
+PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
+PAYSTACK_WEBHOOK_SECRET = os.getenv('PAYSTACK_WEBHOOK_SECRET', '')
+PAYSTACK_API_URL = 'https://api.paystack.co'
+
 # Auto-pick frontend based on DEBUG
 FRONTEND_URL = os.getenv(
     "FRONTEND_URL",
@@ -129,8 +135,8 @@ INSTALLED_APPS = [
     'messaging',
     'whitenoise',
     'rooms',
-    "anymail",
-    
+    'anymail',
+    'transactions',
 ]
 
 MIDDLEWARE = [

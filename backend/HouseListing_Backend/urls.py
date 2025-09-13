@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/core/', include('core.urls')),
     path('api/rooms/', include('rooms.urls')),
     path('api/messaging/', include('messaging.urls')),
+    path('api/transactions/', include('transactions.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Serve media files during development
