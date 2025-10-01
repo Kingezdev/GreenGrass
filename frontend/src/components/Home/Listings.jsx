@@ -1,7 +1,5 @@
 // components/Home/Listings.jsx
 import React, { useState, useEffect } from 'react';
-import AdvancedSearch from '../AdvancedSearch';
-import PropertyCard from '../PropertyCard';
 import propertyData from '../../data/propertyData';
 
 const Listings = () => {
@@ -33,60 +31,7 @@ const Listings = () => {
     setIsLoading(false);
   }, []);
 
-  const handleSearch = (filters) => {
-    let results = [...properties];
-
-    if (filters.location) {
-      results = results.filter(prop =>
-        prop.location.toLowerCase().includes(filters.location.toLowerCase())
-      );
-    }
-
-    if (filters.minPrice) {
-      results = results.filter(prop => prop.price >= parseInt(filters.minPrice));
-    }
-
-    if (filters.maxPrice) {
-      results = results.filter(prop => prop.price <= parseInt(filters.maxPrice));
-    }
-
-    if (filters.propertyType && filters.propertyType !== 'all') {
-      results = results.filter(prop => prop.propertyType === filters.propertyType);
-    }
-
-    if (filters.bedrooms) {
-      results = results.filter(prop => prop.bedrooms >= parseInt(filters.bedrooms));
-    }
-
-    if (filters.bathrooms) {
-      results = results.filter(prop => prop.bathrooms >= parseInt(filters.bathrooms));
-    }
-
-    if (filters.minArea) {
-      results = results.filter(prop => prop.area >= parseInt(filters.minArea));
-    }
-
-    if (filters.maxArea) {
-      results = results.filter(prop => prop.area <= parseInt(filters.maxArea));
-    }
-
-    if (filters.amenities && filters.amenities.length > 0) {
-      results = results.filter(prop =>
-        filters.amenities.every(amenity => prop.amenities.includes(amenity))
-      );
-    }
-
-    if (filters.verifiedOnly) {
-      results = results.filter(prop => prop.verified);
-    }
-
-    if (filters.availableNow) {
-      results = results.filter(prop => prop.available);
-    }
-
-    setFilteredProperties(results);
-  };
-
+ 
   const handleReset = () => {
     setFilteredProperties(properties);
   };
@@ -123,13 +68,13 @@ const Listings = () => {
           <p className="text-gray-600 mt-4">Discover our curated selection of premium properties</p>
         </div>
 
-        <AdvancedSearch onSearch={handleSearch} onReset={handleReset} />
+    
 
         <div className="my-6 flex justify-between items-center">
           <p className="text-gray-600">
             Showing {filteredProperties.length} of {properties.length} properties
           </p>
-          <select 
+          <select
             onChange={handleSortChange}
             className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
           >
@@ -155,9 +100,7 @@ const Listings = () => {
           </div>
         ) : filteredProperties.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProperties.slice(0, 6).map(property => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
+            
           </div>
         ) : (
           <div className="text-center py-12">
@@ -179,6 +122,7 @@ const Listings = () => {
           </button>
         </div>
       </div>
+
     </section>
   );
 };

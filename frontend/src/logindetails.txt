@@ -6,3 +6,23 @@
   "email": "landlord12@example.com",
   "password": "securepassword123"
 }
+
+landlord
+title
+property_type
+rental_type
+address
+price
+bedrooms
+bathrooms
+area_sqft
+description
+status
+furnished
+parking
+pets_allowed
+utilities_included
+created_at
+updated_at
+
+if the backend does not require this ({ name: "", location: "", price: "", description: "" }) will i get an error and what error

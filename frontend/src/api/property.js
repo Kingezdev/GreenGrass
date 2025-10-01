@@ -16,10 +16,11 @@ export const getAllProperties = async () => {
 // Get property details by ID (no auth required)
 export const getPropertyById = async (id) => {
   try {
-    const response = await axios.get(`${BASE_URL}${id}/`);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
+    const res = await axios.get(`${BASE_URL}${id}/`); // make sure the trailing slash is included
+    return res.data;
+  } catch (err) {
+    console.error("Backend error:", err.response?.data || err.message);
+    throw new Error("Property could not be fetched. Try again later.");
   }
 };
 

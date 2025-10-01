@@ -35,3 +35,5 @@ export const getLandlords = async () => {
   if (!res.ok) throw new Error("Failed to fetch landlords");
   return res.json();
 };
+
+

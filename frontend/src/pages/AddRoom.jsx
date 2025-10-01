@@ -1,4 +1,4 @@
-// pages/AddRoom.jsx
+// src/pages/AddRoom.jsx
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { addRoomToProperty } from "../api/room";
@@ -6,14 +6,16 @@ import { useAuth } from "../context/AuthContext";
 import HandleLoading from "../utils/HandleLoading";
 
 const AddRoom = () => {
-  const { id } = useParams(); // property ID from URL
+  const { property_id } = useParams(); // ✅ matches route param
   const { accessToken } = useAuth();
+
   const [formData, setFormData] = useState({
     name: "",
     type: "",
     price: "",
     description: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
@@ -28,12 +30,19 @@ const AddRoom = () => {
     setError(null);
     setSuccess(null);
 
+    if (!property_id) {
+      setError("Property ID is missing.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const data = await addRoomToProperty(id, formData, accessToken);
+      const data = await addRoomToProperty(property_id, formData, accessToken);
       setSuccess("Room added successfully!");
       setFormData({ name: "", type: "", price: "", description: "" });
     } catch (err) {
-      setError(err.error || "Failed to add room.");
+      console.error(err);
+      setError(err?.error || err?.message || "Failed to add room.");
     } finally {
       setLoading(false);
     }

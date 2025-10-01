@@ -1,4 +1,3 @@
-// src/pages/Search.jsx
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getProfileByUsername } from "../api/accounts";
@@ -16,44 +15,43 @@ const Search = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!query) return;
+    if (!query.trim()) return;
 
     try {
       setLoading(true);
       setError(null);
-      const profile = await getProfileByUsername(query, accessToken);
-      setResults([profile]);
+      const profile = await getProfileByUsername(query.trim(), accessToken);
+      setResults([profile]); // wrap in array for SearchResults
     } catch (err) {
+      setError(err.message || "User not found");
       handle404(err);
+      setResults([]);
     } finally {
       setLoading(false);
     }
-
   };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <form onSubmit={handleSearch} className="flex mb-4">
+      <form onSubmit={handleSearch} className="flex gap-2 mb-4">
         <input
           type="text"
-          placeholder="Search by username..."
+          placeholder="Enter username (or first/last name)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 p-2 border border-gray-300 rounded-l-md focus:outline-none"
+          className="flex-1 border rounded-lg px-3 py-2"
         />
         <button
           type="submit"
-          className="px-4 py-2 bg-green-500 text-white rounded-r-md hover:bg-green-600"
+          className="bg-green-600 text-white px-4 py-2 rounded-lg"
         >
           Search
         </button>
       </form>
 
       <HandleLoading loading={loading}>
-        {!error && results.length > 0 && <SearchResults results={results} />}
-        {!error && results.length === 0 && query && (
-          <p className="text-gray-500">No users found.</p>
-        )}
+        {error && <p className="text-red-600">{error}</p>}
+        {results.length > 0 && <SearchResults profiles={results} />}
       </HandleLoading>
     </div>
   );

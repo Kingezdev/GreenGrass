@@ -7,14 +7,20 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
 
   // Load user from localStorage on mount
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     const storedUser = localStorage.getItem("user");
+    const storedProfile = localStorage.getItem("profile");
+
     if (token && storedUser) {
       setAccessToken(token);
       setUser(JSON.parse(storedUser));
+    }
+    if (storedProfile) {
+      setProfile(JSON.parse(storedProfile));
     }
     setLoading(false);
   }, []);
@@ -74,13 +80,15 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setAccessToken(null);
+    setProfile(null);
     localStorage.removeItem("access_token");
     localStorage.removeItem("user");
+    localStorage.removeItem("profile");
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, accessToken, login, register, logout, loading }}
+      value={{ user, accessToken, profile, setProfile, login, register, logout, loading }}
     >
       {children}
     </AuthContext.Provider>

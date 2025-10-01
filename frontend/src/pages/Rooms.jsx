@@ -5,10 +5,10 @@ import RoomList from "../components/Rooms/RoomList";
 const Rooms = () => {
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Rooms</h1>
+      <h1 className="text-3xl font-bold mb-6">Rooms page</h1>
       <RoomList />
       <Link
-        to="/rooms/:property_id"
+        to="/rooms/:property_id/add-room"
         className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
       >
         ADD new room

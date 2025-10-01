@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+.og-flex{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.og-p{
+  padding: 16px 20px;
+}
+
+.og-bg{
+  border-radius: 16px;
+  background-color: #f3f4f6;
+  
+}
